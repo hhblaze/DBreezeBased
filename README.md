@@ -12,7 +12,8 @@ Assemblies: <a href = 'https://github.com/hhblaze/DBreezeBased/blob/master/DBree
 Assemblies: <a href = 'https://github.com/hhblaze/DBreezeBased/blob/master/DBreezeBased/bin/Release/Xamarin/DBreezeBased_01_019_20150306_NET45_MONO_Xamarin.zip'  target='_blank'>Xamarin</a> 
 </br> 
 Source of <a href = 'https://github.com/hhblaze/DBreeze'  target='_blank'>DBreeze database</a>
-</br> 
+
+
 Features:
 
 - Works on Servers/Desktops/Mobile Platforms Xamarin/MONO/.NET
