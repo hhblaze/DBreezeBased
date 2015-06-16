@@ -7,15 +7,15 @@ DBreezeBased is an embedded ACID Document database and a Text Search engine, bas
 
 Documentation: <a href = 'https://docs.google.com/document/d/1YHhu9bteua50YEY1sZNv9VlQfypiQe7buRb7z8-FLyg/pub'  target='_blank'>DBreezeBased documentation</a>
 </br> 
-Assemblies: <a href = 'https://github.com/hhblaze/DBreezeBased/blob/master/DBreezeBased/bin/Release/NET45/DBreezeBased_01_019_20150306_NET45_MONO.zip'  target='_blank'>.NET MONO</a> 
-</br> 
-Assemblies: <a href = 'https://github.com/hhblaze/DBreezeBased/blob/master/DBreezeBased/bin/Release/Xamarin/DBreezeBased_01_019_20150306_NET45_MONO_Xamarin.zip'  target='_blank'>Xamarin</a> 
-</br> 
+Assemblies: <a href = 'https://www.nuget.org/packages/DBreezeBased/'  target='_blank'>via NuGet</a> 
+
+
 Source of <a href = 'https://github.com/hhblaze/DBreeze'  target='_blank'>DBreeze database</a>
 
 
 Features:
 
+- It's a free software for those, who think that it should be free.
 - Works on Servers/Desktops/Mobile Platforms Xamarin/MONO/.NET
 - Standalone and In-Transactional modes (separate or existing DBreeze instances and shared transactions)
 - Can search words and words parts among documents/objects using AND/OR logic
