@@ -3,7 +3,8 @@ DBreezeBased
 ![Image of Build](https://img.shields.io/badge/DBreezeBased-stable%20version%201.019-3399FF.svg)
 
 DBreezeBased is an embedded ACID Document database and a Text Search engine, based on DBreeze database - dbreeze.tiesky.com. Written on C# for Xamarin, Mono and .NET 3.5
-</br>
+
+
 Documentation: <a href = 'https://docs.google.com/document/d/1YHhu9bteua50YEY1sZNv9VlQfypiQe7buRb7z8-FLyg/pub'  target='_blank'>DBreezeBased documentation</a>
 </br> 
 Assemblies: <a href = 'https://github.com/hhblaze/DBreezeBased/blob/master/DBreezeBased/bin/Release/NET45/DBreezeBased_01_019_20150306_NET45_MONO.zip'  target='_blank'>.NET MONO</a> 
