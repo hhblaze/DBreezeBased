@@ -1,0 +1,31 @@
+﻿To every table DocumentsStorageTablesPrefix is added
+
+
+"m" - meta information
+	NestedTable<int,byte[]>
+		Key 1 <string,long> where KV: <DocumentSpaceName,doucmentSpaceId> Relation between documents string space and document ID
+		Key 2 <long> monotonically grown documentSpaceID
+		
+
+"p" - tables to be processes
+	<byte[],byte> where KV: <Docs to be processed	DocumentSpaceId(long)+DocumentId(int), byte where 1 must be deleted and 0 - inserted> 
+
+"d"+documentSpaceId - one document space storage
+	NestedTable<int,byte[]>
+		Key 1 <int,byte[]> where KV:<sequentialDocumentId,document self as serialized and compressed if first byte 1 or not compressed if first byte 0 DBreezeBased.DocumentsStorage.Document>
+		Key 2 <string,int> where KV: <external documentID (if exists), internalID>
+		Key 3 <byte[],byte[]> where Key is composite InitialDocId(int)+VersionNumber(int)+SequentialDocId (int just registration of the version numbers. Document.InternalId has always initial document number)
+								Value: first byte 0 - ok, 1 - entry is deleted
+		Key 4 <int> monotonically grown docID 
+
+
+"s"+documentSpaceId - search indexes we locates separately from "d" table
+	NestedTable<int,byte[]>		
+		Key 2 : <string,byte[]> NestedTable (Index to search by words)  
+			Where
+			Key: <string> - word
+			Value: <byte[]> BlockId<int> + NumberInBlock<int> (reference to Key 10)
+		Key 10: <int,byte[]> where  K is BlockID<int> (1000 words per block), Value is GzippedAndProtobufed Dictionary<int,byte[]> where K is ID of the word in Key2 and value its WAH reserved (init reservation 100KB per block)
+		Key 11: <int> - current blockNumber
+		Key 12: <int> used number in the block
+
