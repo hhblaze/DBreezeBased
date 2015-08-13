@@ -10,6 +10,7 @@ DBreezeBased is an embedded ACID Document database and a Text Search engine, bas
 Documentation: <a href = 'https://docs.google.com/document/d/1YHhu9bteua50YEY1sZNv9VlQfypiQe7buRb7z8-FLyg/pub'  target='_blank'>DBreezeBased documentation</a>
 </br> 
 Assemblies: <a href = 'https://www.nuget.org/packages/DBreezeBased/'  target='_blank'>via NuGet</a> 
+Changes <a href = 'https://docs.google.com/document/d/1_hbp6q2ivqmHOyroZwMvghIzUQsuCE3OcA5rPaDYBx4/pub'  target='_blank'>by versions</a>
 
 
 Source of <a href = 'https://github.com/hhblaze/DBreeze'  target='_blank'>DBreeze database</a>
