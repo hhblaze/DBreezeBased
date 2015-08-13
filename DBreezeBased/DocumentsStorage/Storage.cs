@@ -437,7 +437,8 @@ namespace DBreezeBased.DocumentsStorage
         /// </summary>
         /// <param name="docs">Documents to  be added</param>
         /// <returns>Can return empty list in case of misunderstandings, or the same list back with cleaned Searchables, Content and set InternalId</returns>
-        public List<Document> AddDocuments(List<Document> docs)
+        //public List<Document> AddDocuments(List<Document> docs)
+        public IList<Document> AddDocuments(IList<Document> docs)
         {
 
             try
@@ -1725,7 +1726,7 @@ namespace DBreezeBased.DocumentsStorage
         /// <param name="includeContent"></param>
         /// <param name="includeSearchables"></param>
         /// <returns></returns>
-        public List<Document> GetDocumentsByInternalIDs(string documentSpace, List<int> internalIDs, bool includeContent, bool includeSearchables)
+        public IList<Document> GetDocumentsByInternalIDs(string documentSpace, IList<int> internalIDs, bool includeContent, bool includeSearchables)
         {
             List<Document> ret = new List<Document>();
 

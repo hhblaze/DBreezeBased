@@ -86,6 +86,16 @@
             
             </summary>
         </member>
+        <member name="F:DBreezeBased.DocumentsStorage.SearchRequest.eSearchLogicType.AND">
+            <summary>
+            Strong. Only complete occurance is accepted
+            </summary>
+        </member>
+        <member name="F:DBreezeBased.DocumentsStorage.SearchRequest.eSearchLogicType.OR">
+            <summary>
+            Week logic, 1 and more occurances are accepted, sorted by relevancy of occurances
+            </summary>
+        </member>
         <member name="P:DBreezeBased.DocumentsStorage.SearchRequest.DocumentSpace">
             <summary>
             Doucument space which must be searched
@@ -139,29 +149,9 @@
             !This is not the quantity of documents where such pattern exists, but StartsWith result of all unique words in the document space!
             </summary>
         </member>
-        <member name="F:DBreezeBased.DocumentsStorage.SearchRequest.eSearchLogicType.AND">
-            <summary>
-            Strong. Only complete occurance is accepted
-            </summary>
-        </member>
-        <member name="F:DBreezeBased.DocumentsStorage.SearchRequest.eSearchLogicType.OR">
-            <summary>
-            Week logic, 1 and more occurances are accepted, sorted by relevancy of occurances
-            </summary>
-        </member>
         <member name="T:DBreezeBased.DocumentsStorage.SearchResponse">
             <summary>
             
-            </summary>
-        </member>
-        <member name="F:DBreezeBased.DocumentsStorage.SearchResponse.SearchDurationMs">
-            <summary>
-            SearchDurationMs
-            </summary>
-        </member>
-        <member name="F:DBreezeBased.DocumentsStorage.SearchResponse.UniqueWordsInDataSpace">
-            <summary>
-            UniqueWordsInDataSpace
             </summary>
         </member>
         <member name="P:DBreezeBased.DocumentsStorage.SearchResponse.ResultCode">
@@ -182,6 +172,16 @@
         <member name="P:DBreezeBased.DocumentsStorage.SearchResponse.DocumentSpace">
             <summary>
             Doucument space which was searched
+            </summary>
+        </member>
+        <member name="F:DBreezeBased.DocumentsStorage.SearchResponse.SearchDurationMs">
+            <summary>
+            SearchDurationMs
+            </summary>
+        </member>
+        <member name="F:DBreezeBased.DocumentsStorage.SearchResponse.UniqueWordsInDataSpace">
+            <summary>
+            UniqueWordsInDataSpace
             </summary>
         </member>
         <member name="P:DBreezeBased.DocumentsStorage.SearchResponse.SearchCriteriaIsOverloaded">
@@ -227,6 +227,16 @@
             Probably for mobile telephones this value must be decreased to 100K.
             </summary>
         </member>
+        <member name="E:DBreezeBased.DocumentsStorage.Storage.OnProcessingStarted">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="E:DBreezeBased.DocumentsStorage.Storage.OnProcessingStopped">
+            <summary>
+            
+            </summary>
+        </member>
         <member name="F:DBreezeBased.DocumentsStorage.Storage.DBreezeEngine">
             <summary>
             DBreeze engine must be supplied
@@ -265,12 +275,44 @@
             Empty subscriber
             </summary>
         </member>
+        <member name="T:DBreezeBased.DocumentsStorage.Storage.I1">
+            <summary>
+            Tech calss
+            </summary>
+        </member>
         <member name="M:DBreezeBased.DocumentsStorage.Storage.ReindexDocuments">
             <summary>
             Deletes "s" and "p" tables from every document space and recreates search indexes for all non-deleted documents in all document spaces.
             </summary>
         </member>
-        <member name="M:DBreezeBased.DocumentsStorage.Storage.AddDocuments(System.Collections.Generic.List{DBreezeBased.DocumentsStorage.Document})">
+        <member name="T:DBreezeBased.DocumentsStorage.Storage.InTran_DocumentAppender">
+            <summary>
+            To be used inside of ready transaction.
+            All table syncs must be already done
+            </summary>
+        </member>
+        <member name="M:DBreezeBased.DocumentsStorage.Storage.InTran_DocumentAppender.#ctor(DBreeze.Transactions.Transaction,System.String)">
+            <summary>
+            
+            </summary>
+            <param name="_tran"></param>
+            <param name="_DocumentsStorageTablesPrefix"></param>
+        </member>
+        <member name="M:DBreezeBased.DocumentsStorage.Storage.InTran_DocumentAppender.RemoveDocument(DBreezeBased.DocumentsStorage.Document)">
+            <summary>
+            Supplied document must already have DocumentSpaceId filled.
+            Must be Synced tables: DocumentsStorageTablesPrefix + "p", and all DocumentsStorageTablesPrefix + "d" + doc.DocumentSpaceId
+            </summary>
+            <param name="doc"></param>
+        </member>
+        <member name="M:DBreezeBased.DocumentsStorage.Storage.InTran_DocumentAppender.AppendDocument(DBreezeBased.DocumentsStorage.Document)">
+            <summary>
+            Supplied document must already have DocumentSpaceId filled.
+            Must be Synced tables: DocumentsStorageTablesPrefix + "p", and all DocumentsStorageTablesPrefix + "d" + doc.DocumentSpaceId
+            </summary>
+            <param name="doc"></param>
+        </member>
+        <member name="M:DBreezeBased.DocumentsStorage.Storage.AddDocuments(System.Collections.Generic.IList{DBreezeBased.DocumentsStorage.Document})">
             <summary>
             Adds documents to the storage.
             </summary>
@@ -284,9 +326,44 @@
             <para>Must be called right after AddDocuments routine</para>
             </summary>
         </member>
+        <member name="T:DBreezeBased.DocumentsStorage.Storage.I2">
+            <summary>
+            Technical class
+            </summary>
+        </member>
+        <member name="F:DBreezeBased.DocumentsStorage.Storage.I2.doc">
+            <summary>
+            Can be null
+            </summary>
+        </member>
+        <member name="F:DBreezeBased.DocumentsStorage.Storage.I2.VersionDocumentToRemove">
+            <summary>
+            Flag (if not null) indicates that we must remove document from the search and clean VersionTable
+            </summary>
+        </member>
+        <member name="P:DBreezeBased.DocumentsStorage.Storage.IsProcessing">
+            <summary>
+            Indicates that system is in document processing mode
+            </summary>
+        </member>
         <member name="M:DBreezeBased.DocumentsStorage.Storage.ProcessDocsAtOnce">
             <summary>
             
+            </summary>
+        </member>
+        <member name="T:DBreezeBased.DocumentsStorage.Storage.WordInDoc">
+            <summary>
+            ...
+            </summary>
+        </member>
+        <member name="F:DBreezeBased.DocumentsStorage.Storage.WordInDoc.docsAdded">
+            <summary>
+            Docs which contain this word
+            </summary>
+        </member>
+        <member name="F:DBreezeBased.DocumentsStorage.Storage.WordInDoc.docsRemoved">
+            <summary>
+            Docs which must be removed from word WAH
             </summary>
         </member>
         <member name="M:DBreezeBased.DocumentsStorage.Storage.ProcessDocsBlock(System.Collections.Generic.List{DBreezeBased.DocumentsStorage.Storage.I2})">
@@ -305,6 +382,11 @@
             </summary>
             <param name="format"></param>
             <param name="args"></param>
+        </member>
+        <member name="T:DBreezeBased.DocumentsStorage.Storage.WordDefinition">
+            <summary>
+            
+            </summary>        
         </member>
         <member name="M:DBreezeBased.DocumentsStorage.Storage.GetWordsDefinitionFromText(System.String)">
             <summary>
@@ -368,7 +450,7 @@
             <param name="internalID"></param>
             <returns></returns>
         </member>
-        <member name="M:DBreezeBased.DocumentsStorage.Storage.GetDocumentsByInternalIDs(System.String,System.Collections.Generic.List{System.Int32},System.Boolean,System.Boolean)">
+        <member name="M:DBreezeBased.DocumentsStorage.Storage.GetDocumentsByInternalIDs(System.String,System.Collections.Generic.IList{System.Int32},System.Boolean,System.Boolean)">
             <summary>
             Returning list can contain null values
             </summary>
@@ -440,88 +522,6 @@
             Only distinct only 
             </summary>
             <param name="searchKeywords"></param>
-        </member>
-        <member name="E:DBreezeBased.DocumentsStorage.Storage.OnProcessingStarted">
-            <summary>
-            
-            </summary>
-        </member>
-        <member name="E:DBreezeBased.DocumentsStorage.Storage.OnProcessingStopped">
-            <summary>
-            
-            </summary>
-        </member>
-        <member name="P:DBreezeBased.DocumentsStorage.Storage.IsProcessing">
-            <summary>
-            Indicates that system is in document processing mode
-            </summary>
-        </member>
-        <member name="T:DBreezeBased.DocumentsStorage.Storage.I1">
-            <summary>
-            Tech calss
-            </summary>
-        </member>
-        <member name="T:DBreezeBased.DocumentsStorage.Storage.InTran_DocumentAppender">
-            <summary>
-            To be used inside of ready transaction.
-            All table syncs must be already done
-            </summary>
-        </member>
-        <member name="M:DBreezeBased.DocumentsStorage.Storage.InTran_DocumentAppender.#ctor(DBreeze.Transactions.Transaction,System.String)">
-            <summary>
-            
-            </summary>
-            <param name="_tran"></param>
-            <param name="_DocumentsStorageTablesPrefix"></param>
-        </member>
-        <member name="M:DBreezeBased.DocumentsStorage.Storage.InTran_DocumentAppender.RemoveDocument(DBreezeBased.DocumentsStorage.Document)">
-            <summary>
-            Supplied document must already have DocumentSpaceId filled.
-            Must be Synced tables: DocumentsStorageTablesPrefix + "p", and all DocumentsStorageTablesPrefix + "d" + doc.DocumentSpaceId
-            </summary>
-            <param name="doc"></param>
-        </member>
-        <member name="M:DBreezeBased.DocumentsStorage.Storage.InTran_DocumentAppender.AppendDocument(DBreezeBased.DocumentsStorage.Document)">
-            <summary>
-            Supplied document must already have DocumentSpaceId filled.
-            Must be Synced tables: DocumentsStorageTablesPrefix + "p", and all DocumentsStorageTablesPrefix + "d" + doc.DocumentSpaceId
-            </summary>
-            <param name="doc"></param>
-        </member>
-        <member name="T:DBreezeBased.DocumentsStorage.Storage.I2">
-            <summary>
-            Technical class
-            </summary>
-        </member>
-        <member name="F:DBreezeBased.DocumentsStorage.Storage.I2.doc">
-            <summary>
-            Can be null
-            </summary>
-        </member>
-        <member name="F:DBreezeBased.DocumentsStorage.Storage.I2.VersionDocumentToRemove">
-            <summary>
-            Flag (if not null) indicates that we must remove document from the search and clean VersionTable
-            </summary>
-        </member>
-        <member name="T:DBreezeBased.DocumentsStorage.Storage.WordInDoc">
-            <summary>
-            ...
-            </summary>
-        </member>
-        <member name="F:DBreezeBased.DocumentsStorage.Storage.WordInDoc.docsAdded">
-            <summary>
-            Docs which contain this word
-            </summary>
-        </member>
-        <member name="F:DBreezeBased.DocumentsStorage.Storage.WordInDoc.docsRemoved">
-            <summary>
-            Docs which must be removed from word WAH
-            </summary>
-        </member>
-        <member name="T:DBreezeBased.DocumentsStorage.Storage.WordDefinition">
-            <summary>
-            
-            </summary>        
         </member>
         <member name="T:DBreezeBased.DocumentsStorage.WAH2">
             <summary>
