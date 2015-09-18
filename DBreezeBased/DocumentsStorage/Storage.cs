@@ -1451,6 +1451,9 @@ namespace DBreezeBased.DocumentsStorage
 
                 foreach (var c in text)
                 {
+                    if (c=='-' || c=='@')   //Complex names or email address inside
+                        continue;
+
                     if (Char.IsLetterOrDigit(c) || Char.IsSymbol(c))
                     {
                         sb.Append(c);
@@ -2683,6 +2686,9 @@ namespace DBreezeBased.DocumentsStorage
 
                 foreach (var c in searchKeywords)
                 {
+                    if (c == '-' || c == '@')   //Complex names or email address inside
+                        continue;
+
                     if (Char.IsLetterOrDigit(c) || Char.IsSymbol(c))
                     {
                         sb.Append(c);
