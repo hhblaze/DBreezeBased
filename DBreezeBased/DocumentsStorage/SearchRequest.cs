@@ -41,7 +41,7 @@ namespace DBreezeBased.DocumentsStorage
 
 
         /// <summary>
-        /// Doucument space which must be searched
+        /// DoucumentSpaceName which must be searched
         /// </summary>
         [ProtoBuf.ProtoMember(1, IsRequired = true)]
         public string DocumentSpace { get; set; }

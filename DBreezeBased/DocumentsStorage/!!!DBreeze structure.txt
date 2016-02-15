@@ -19,7 +19,7 @@
 		Key 4 <int> monotonically grown docID 
 
 
-"s"+documentSpaceId - search indexes we locates separately from "d" table
+"s"+documentSpaceId - search indexes we locate separately from "d" table
 	NestedTable<int,byte[]>		
 		Key 2 : <string,byte[]> NestedTable (Index to search by words)  
 			Where

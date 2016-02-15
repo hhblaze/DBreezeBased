@@ -31,11 +31,17 @@ namespace DBreezeBased.DocumentsStorage
         public string DocumentsStorageTablesPrefix = "dcstr";
 
         /// <summary>
-        /// Must stay 2 if you want to search starting from 2 letters or bigger in other case.
+        /// Must stay 2 if you want to search starting from 2 letters or bigger in other case.        
         /// Minimal lenght of the search word among the document.
-        /// Document searchables will be prepared due to this value
+        /// Document searchables will be prepared due to this value.
         /// </summary>
         public int SearchWordMinimalLength = 2;
+
+        /// <summary>
+        /// If true, then only CompleteWord or StartsWith will work, search in the middle of the word will not be possible.
+        /// Default false.
+        /// </summary>
+        public bool FullTextOnly = false;
 
         /// <summary>
         /// Engine processes newly added documents by chunks limited by quantity of chars.
@@ -43,6 +49,11 @@ namespace DBreezeBased.DocumentsStorage
         /// Probably for mobile telephones this value must be decreased to 100K.
         /// </summary>
         public int MaxCharsToBeProcessedPerRound = 10000000;
+
+        /// <summary>
+        /// Default is 10. MaxQuantityOfWordsToBeSearched via SearchDocumentSpace
+        /// </summary>
+        public int MaxQuantityOfWordsToBeSearched = 10;
 
         /// <summary>
         /// 
@@ -1366,8 +1377,11 @@ namespace DBreezeBased.DocumentsStorage
         {
             if (VerboseConsoleEnabled)
             {
-                Console.Write("DBreezeBased.DocumentStorage. ");
-                Console.WriteLine(format, args);
+                //Console.Write("DBreezeBased.DocumentStorage. ");
+                //Console.WriteLine(format, args);
+
+                System.Diagnostics.Debug.Write("DBreezeBased.DocumentStorage. ");
+                System.Diagnostics.Debug.WriteLine(format, args);
             }
         }
                
@@ -1394,20 +1408,30 @@ namespace DBreezeBased.DocumentsStorage
         /// <returns></returns>
         Dictionary<string, WordDefinition> GetWordsDefinitionFromText(string text)
         {
+            Dictionary<string, WordDefinition> wordsCounter = new Dictionary<string, WordDefinition>();
+
             try
             {
                 if (String.IsNullOrEmpty(text))
-                    return null;
+                    return wordsCounter;
 
                 StringBuilder sb = new StringBuilder();
                 string word = "";
                 WordDefinition wordDefinition = null;
-                Dictionary<string, WordDefinition> wordsCounter = new Dictionary<string, WordDefinition>();
+                
+
+                //Support for previous versions without FullTextOnly
+                if (!FullTextOnly && this.SearchWordMinimalLength == 0)
+                {
+                    FullTextOnly = true;
+                    this.SearchWordMinimalLength = 2;
+                }
+
 
                 Action processWord = () =>
                 {
                     //We take all words, so we can later find even by email address jj@gmx.net ... we will need jj and gmx.net
-                    if (sb.Length > 0)
+                    if (sb.Length > 0 && sb.Length >= this.SearchWordMinimalLength)
                     {
                         word = sb.ToString().ToLower();
                         
@@ -1417,7 +1441,7 @@ namespace DBreezeBased.DocumentsStorage
 
                         
 
-                        if (this.SearchWordMinimalLength > 0)   //If equals to 0, we store only words for full text search
+                        if (!FullTextOnly)   //If equals to 0, we store only words for full text search
                         {
                             while (word.Length - i >= this.SearchWordMinimalLength)
                             {
@@ -1426,8 +1450,10 @@ namespace DBreezeBased.DocumentsStorage
                             }
                         }
 
+                       // System.Diagnostics.Debug.WriteLine("--------------");
                         foreach (var w in wrds)
                         {
+                            //System.Diagnostics.Debug.WriteLine(w);
                             if (wordsCounter.TryGetValue(w, out wordDefinition))
                             {
                                 wordDefinition.CountInDocu++;
@@ -1477,15 +1503,15 @@ namespace DBreezeBased.DocumentsStorage
                 //Processing last word
                 processWord();
 
-                if (wordsCounter.Count() > 0)
-                    return wordsCounter;
+                //if (wordsCounter.Count() > 0)
+                //    return wordsCounter;
             }
             catch (System.Exception ex)
             {
               
             }
 
-            return null;
+            return wordsCounter;
         }
 
 
@@ -1646,7 +1672,44 @@ namespace DBreezeBased.DocumentsStorage
                 throw ex;
             }
         }
-        
+
+        /// <summary>
+        /// Note DocumentsStorageTablesPrefix + "m" must be sysnchronized
+        /// Returns DocumentSpaceId (internally opens new transaction)
+        /// </summary>
+        /// <param name="documentSpace"></param>
+        /// <param name="createIfNotFound"></param>
+        /// <param name="tran"></param>
+        /// <returns></returns>
+        public long GetDocumentSpaceId(string documentSpace, bool createIfNotFound, DBreeze.Transactions.Transaction tran)
+        {
+            try
+            {
+                if (String.IsNullOrEmpty(documentSpace))
+                    return 0;    //Wrong parameters
+
+                //Getting document space index
+                var mt = tran.InsertTable<int>(DocumentsStorageTablesPrefix + "m", 1, 0);
+                var docSpaceId = mt.Select<string, long>(documentSpace).Value;
+
+                if (docSpaceId == 0 && createIfNotFound)
+                {
+                    long maxDocSpaceId = tran.Select<int, long>(DocumentsStorageTablesPrefix + "m", 2).Value;
+                    maxDocSpaceId++;
+                    tran.Insert<int, long>(DocumentsStorageTablesPrefix + "m", 2, maxDocSpaceId);
+                    mt.Insert<string, long>(documentSpace, maxDocSpaceId);
+                    tran.Commit();
+                    return maxDocSpaceId;
+                }
+
+                return docSpaceId;
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+        }
+
         /// <summary>
         /// Can return null, if not found.
         ///  (internally opens new transaction)
@@ -2078,11 +2141,14 @@ namespace DBreezeBased.DocumentsStorage
         }
 
                 
+
         /// <summary>
-        /// 
+        /// If is called from transaction, then tran must be supplied
         /// </summary>
         /// <param name="req"></param>
-        public SearchResponse SearchDocumentSpace(SearchRequest req)
+        /// <param name="tran"></param>
+        /// <returns></returns>
+        public SearchResponse SearchDocumentSpace(SearchRequest req, DBreeze.Transactions.Transaction tran = null)
         {
             SearchResponse resp = new SearchResponse();
             try
@@ -2116,8 +2182,14 @@ namespace DBreezeBased.DocumentsStorage
                 System.Diagnostics.Stopwatch sw = new System.Diagnostics.Stopwatch();
                 sw.Start();
 
-                using (var tran = DBreezeEngine.GetTransaction())
-                {
+                bool transactionIsSupplied = tran != null;
+
+                //using (var tran = DBreezeEngine.GetTransaction())
+                //{
+
+                if (!transactionIsSupplied)
+                    tran = DBreezeEngine.GetTransaction();
+
                     var mt = tran.SelectTable<int>(DocumentsStorageTablesPrefix + "m", 1, 0);
                     var docSpaceId = mt.Select<string, long>(req.DocumentSpace).Value;
 
@@ -2163,12 +2235,14 @@ namespace DBreezeBased.DocumentsStorage
                     //Currently we ignore these words and do nothing with them
                     List<string> highOccuranceWordParts = new List<string>();
 
-                    foreach (var word in Words.Take(10)) //Maximum 10 words for search
+
+                    foreach (var word in Words.Take(this.MaxQuantityOfWordsToBeSearched)) //Maximum 10 words for search
                     {
                         anyWordFound = false;
                         totalFoundWords = 0;
                         perWord = new Dictionary<string, WordInDoc>();
 
+                       
                         foreach (var row1 in tbOneWordWAH.SelectForwardStartsWith<string, byte[]>(word))
                         {
                             anyWordFound = true;
@@ -2381,14 +2455,17 @@ namespace DBreezeBased.DocumentsStorage
                         }
 
                     }
-                    #endregion
+                #endregion
 
 
-                }//eo using
+                // }//eo using
+
+                if (!transactionIsSupplied)
+                    tran.Dispose();
 
 
-                //Repacking dmnts into resp
-                repack();
+                    //Repacking dmnts into resp
+                    repack();
                 sw.Stop();
 
                 resp.SearchDurationMs = sw.ElapsedMilliseconds;
@@ -2670,9 +2747,15 @@ namespace DBreezeBased.DocumentsStorage
                 HashSet<string> words = new HashSet<string>();
                 string word = String.Empty;
 
+                if (!FullTextOnly && this.SearchWordMinimalLength == 0)
+                {
+                    FullTextOnly = true;
+                    this.SearchWordMinimalLength = 2;
+                }
+
                 Action processWord = () =>
                 {
-                    if (sb.Length > 0)
+                    if (sb.Length > 0 && sb.Length >= this.SearchWordMinimalLength)
                     {
                         word = sb.ToString().ToLower();
                         if(!words.Contains(word))
