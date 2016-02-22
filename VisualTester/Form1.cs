@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 
 using DBreeze;
+using DBreezeBased.Serialization;
 //using DBreezeBased;
 
 namespace VisualTester
@@ -45,6 +46,9 @@ namespace VisualTester
 
             DocuStorage = new DBreezeBased.DocumentsStorage.Storage(this.engine);
             DocuStorage.VerboseConsoleEnabled = true;   //Make it write in console document processing progress
+            //DocuStorage.SearchWordMinimalLength = 0;
+
+
         }
 
         /// <summary>
@@ -59,9 +63,77 @@ namespace VisualTester
             //this.Test1();
             //this.Test2();
             //this.Test3();
-            //this.Test4();
+            this.Test4();
             //this.Test5();
 
+           // this.Test6();
+        }
+
+
+        [ProtoBuf.ProtoContract]
+        class XTest
+        {
+            //Empty ->new byte[0]
+
+            [ProtoBuf.ProtoMember(1, IsRequired = true)]
+            public int A = 1;
+
+            [ProtoBuf.ProtoMember(2, IsRequired = true)]
+            public int? B = null;
+
+            [ProtoBuf.ProtoMember(3, IsRequired = true)]
+            public int C = 1;
+
+            [ProtoBuf.ProtoMember(4, IsRequired = true)]
+            public bool D = true;
+
+            [ProtoBuf.ProtoMember(5, IsRequired = true)]
+            public bool E = true;
+        }
+
+        void Test6()
+        {
+            //https://developers.google.com/protocol-buffers/docs/encoding
+            //https://developers.google.com/protocol-buffers/docs/overview?hl=en
+            DBreezeBased.DocumentsStorage.Document doc = new DBreezeBased.DocumentsStorage.Document()
+            {
+                DocumentSpace = "space1",
+                //Content = new byte[1000],
+                Content = new byte[] { 1, 23, 56 },
+                DocumentSpaceId = 15,
+                DocumentSequentialId = 12,
+                InternalId = 77,
+                InternalStructure = new byte[] { 24,64,88,67},
+                DocumentName = "name 1",
+                ExternalId = "e1",
+                Searchables = "table song",
+                Description = "descr 1"
+            };
+
+
+            //byte[] ff = doc.SerializeProtobuf();
+            XTest xt = new XTest();
+            xt.A = 150;
+            xt.B = 150;
+            xt.C = 150;
+
+            //Defining first byte
+            int k = (4 << 3) | 0;
+            int k1 = (2 << 3) | 0;
+
+            
+            byte[] df = xt.SerializeProtobuf();
+
+            //-----  Digits
+
+            int v = 127;
+            byte[] b0 = v.SerializeProtobuf();
+            byte[] b1 = BitConverter.GetBytes(v);
+
+            //for (int i = 0; i < b1.Length; i++)
+            //{
+            //    b1[i]
+            //}
         }
 
         /// <summary>
@@ -193,9 +265,10 @@ namespace VisualTester
                         DocumentSpace = "space1",
                         Quantity = 200,
                         MaximalExcludingOccuranceOfTheSearchPattern = 100,  //Must stay lower for low RAM systems (Mobile Phones), and bigger for servers 
-                        //SearchWords = "digging out this morning after",  //returns ExternalId 1 where SearchLogicType is AND                     
-                        //SearchWords = "northeast storm. a travel ban",
-                        SearchWords = "bonny is",
+                                                                            //SearchWords = "digging out this morning after",  //returns ExternalId 1 where SearchLogicType is AND                     
+                                                                            //SearchWords = "northeast storm. a travel ban",
+                        SearchWords = "northe england",
+                        //SearchWords = "bonny is",
                         IncludeDocumentsContent = false,
                         IncludeDocumentsSearchanbles = false
                     });

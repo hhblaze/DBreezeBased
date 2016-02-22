@@ -199,8 +199,40 @@ namespace DBreezeBased.DocumentsStorage
         /// </summary>
         public bool ExistsInDB = false;
 
+        ///// <summary>
+        ///// Returns first added document first (sort by ID asc)
+        ///// </summary>
+        ///// <param name="indexesToCheck"></param>
+        ///// <returns></returns>
+        //public static IEnumerable<uint> TextSearch_AND_logic(List<byte[]> indexesToCheck)
+        //{
+        //    int MinLenght = indexesToCheck.Min(r => r.Length);
+        //    byte res = 0;
+        //    uint docId = 0;
+        //    byte mask = 0;
+
+        //    for (int i = 0; i < MinLenght; i++)
+        //    {
+        //        res = 255;
+        //        foreach (var wah in indexesToCheck)
+        //        {
+        //            res &= wah[i];
+        //        }
+
+        //        for (int j = 0; j < 8; j++)
+        //        {
+        //            mask = (byte)(1 << j);
+
+        //            if ((res & mask) != 0)
+        //                yield return docId;
+
+        //            docId++;
+        //        }
+        //    }
+        //}
+
         /// <summary>
-        /// 
+        /// Returns last added documents first
         /// </summary>
         /// <param name="indexesToCheck"></param>
         /// <returns></returns>
@@ -208,28 +240,89 @@ namespace DBreezeBased.DocumentsStorage
         {
             int MinLenght = indexesToCheck.Min(r => r.Length);
             byte res = 0;
-            uint docId = 0;
+            uint docId = Convert.ToUInt32(MinLenght * 8) - 1;
             byte mask = 0;
 
-            for (int i = 0; i < MinLenght; i++)
+            for (int i = MinLenght - 1; i >= 0; i--)
             {
                 res = 255;
                 foreach (var wah in indexesToCheck)
                 {
                     res &= wah[i];
                 }
-
-                for (int j = 0; j < 8; j++)
+                
+                for (int j = 7; j >= 0; j--)
                 {
                     mask = (byte)(1 << j);
 
                     if ((res & mask) != 0)
-                        yield return docId;
+                        yield return (uint)docId;
 
-                    docId++;
+                    docId--;
                 }
             }
         }
+
+
+        ///// <summary>
+        ///// SOrt by ID desc
+        ///// </summary>
+        ///// <param name="indexesToCheck"></param>
+        ///// <param name="maximalReturnQuantity"></param>
+        ///// <returns></returns>
+        //public static IEnumerable<uint> TextSearch_OR_logic(List<byte[]> indexesToCheck, int maximalReturnQuantity)
+        //{
+        //    int MaxLenght = indexesToCheck.Max(r => r.Length);
+        //    uint docId = 0;
+        //    byte mask = 0;
+        //    int added = 0;
+        //    int[] el = new int[8];
+
+        //    SortedDictionary<int, List<uint>> d = new SortedDictionary<int, List<uint>>();
+        //    List<uint> docLst = null;
+
+        //    for (int i = 0; i < MaxLenght; i++)
+        //    {
+        //        foreach (var wah in indexesToCheck)
+        //        {
+        //            if (i > (wah.Length - 1))
+        //                continue;
+
+        //            for (int j = 0; j < 8; j++)
+        //            {
+        //                mask = (byte)(1 << j);
+        //                if ((wah[i] & mask) != 0)
+        //                    el[j] += 1;
+        //            }
+        //        }
+
+        //        //Here we analyze el array
+        //        for (int j = 0; j < 8; j++)
+        //        {
+        //            //el[j] contains quantity of occurance
+        //            if (el[j] > 0)
+        //            {
+        //                if (!d.TryGetValue(el[j], out docLst))
+        //                    docLst = new List<uint>();
+
+        //                added++;
+        //                docLst.Add(docId);
+
+        //                d[el[j]] = docLst;
+        //            }
+
+        //            el[j] = 0;
+        //            docId++;
+        //        }
+
+        //        if (added > maximalReturnQuantity)
+        //            break;
+        //    }
+
+        //    foreach (var ret in d.OrderByDescending(r => r.Key))
+        //        foreach (var docs in ret.Value)
+        //            yield return docs;
+        //}
 
 
         /// <summary>
@@ -241,7 +334,7 @@ namespace DBreezeBased.DocumentsStorage
         public static IEnumerable<uint> TextSearch_OR_logic(List<byte[]> indexesToCheck, int maximalReturnQuantity)
         {
             int MaxLenght = indexesToCheck.Max(r => r.Length);
-            uint docId = 0;
+            uint docId = Convert.ToUInt32(MaxLenght * 8) - 1;
             byte mask = 0;
             int added = 0;
             int[] el = new int[8];
@@ -249,14 +342,15 @@ namespace DBreezeBased.DocumentsStorage
             SortedDictionary<int, List<uint>> d = new SortedDictionary<int, List<uint>>();
             List<uint> docLst = null;
 
-            for (int i = 0; i < MaxLenght; i++)
+            for (int i = MaxLenght - 1; i >= 0; i--)
             {
                 foreach (var wah in indexesToCheck)
                 {
                     if (i > (wah.Length - 1))
                         continue;
 
-                    for (int j = 0; j < 8; j++)
+                    //for (int j = 0; j < 8; j++)
+                    for (int j = 7; j >= 0; j--)
                     {
                         mask = (byte)(1 << j);
                         if ((wah[i] & mask) != 0)
@@ -265,7 +359,8 @@ namespace DBreezeBased.DocumentsStorage
                 }
 
                 //Here we analyze el array
-                for (int j = 0; j < 8; j++)
+                //for (int j = 0; j < 8; j++)
+                for (int j = 7; j >= 0; j--)
                 {
                     //el[j] contains quantity of occurance
                     if (el[j] > 0)
@@ -274,26 +369,24 @@ namespace DBreezeBased.DocumentsStorage
                             docLst = new List<uint>();
 
                         added++;
-                        docLst.Add(docId);
+                        yield return docId;
+                        //docLst.Add(docId);
 
                         d[el[j]] = docLst;
                     }
 
                     el[j] = 0;
-                    docId++;
+                    docId--;
                 }
 
                 if (added > maximalReturnQuantity)
                     break;
             }
 
-            foreach (var ret in d.OrderByDescending(r => r.Key))
-                foreach (var docs in ret.Value)
-                    yield return docs;
+            //foreach (var ret in d.OrderByDescending(r => r.Key))
+            //    foreach (var docs in ret.Value)
+            //        yield return docs;
         }
-
-
-
 
     }
 }

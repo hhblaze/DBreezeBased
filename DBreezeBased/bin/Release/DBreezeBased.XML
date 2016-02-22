@@ -608,7 +608,7 @@
         </member>
         <member name="M:DBreezeBased.DocumentsStorage.WAH2.TextSearch_AND_logic(System.Collections.Generic.List{System.Byte[]})">
             <summary>
-            
+            Returns last added documents first
             </summary>
             <param name="indexesToCheck"></param>
             <returns></returns>
