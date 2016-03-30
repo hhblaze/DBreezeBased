@@ -1,6 +1,6 @@
 DBreezeBased
 =====================
-![Image of Build](https://img.shields.io/badge/DBreezeBased-stable%20version%201.023-3399FF.svg) 
+![Image of Build](https://img.shields.io/badge/DBreezeBased-stable%20version%201.025-3399FF.svg) 
 ![Image of Build](https://img.shields.io/badge/License-BSD%203,%20FOSS-FC0574.svg) 
 ![Image of Build](https://img.shields.io/badge/Powered%20by-tiesky.com-1883F5.svg)
 
