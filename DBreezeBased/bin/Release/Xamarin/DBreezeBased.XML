@@ -98,7 +98,7 @@
         </member>
         <member name="P:DBreezeBased.DocumentsStorage.SearchRequest.DocumentSpace">
             <summary>
-            Doucument space which must be searched
+            DoucumentSpaceName which must be searched
             </summary>
         </member>
         <member name="P:DBreezeBased.DocumentsStorage.SearchRequest.SearchWords">
@@ -215,9 +215,15 @@
         </member>
         <member name="F:DBreezeBased.DocumentsStorage.Storage.SearchWordMinimalLength">
             <summary>
-            Must stay 2 if you want to search starting from 2 letters or bigger in other case.
+            Must stay 2 if you want to search starting from 2 letters or bigger in other case.        
             Minimal lenght of the search word among the document.
-            Document searchables will be prepared due to this value
+            Document searchables will be prepared due to this value.
+            </summary>
+        </member>
+        <member name="F:DBreezeBased.DocumentsStorage.Storage.FullTextOnly">
+            <summary>
+            If true, then only CompleteWord or StartsWith will work, search in the middle of the word will not be possible.
+            Default false.
             </summary>
         </member>
         <member name="F:DBreezeBased.DocumentsStorage.Storage.MaxCharsToBeProcessedPerRound">
@@ -225,6 +231,11 @@
             Engine processes newly added documents by chunks limited by quantity of chars.
             More chars - more RAM for one block processing. Default value is 10MLN chars.
             Probably for mobile telephones this value must be decreased to 100K.
+            </summary>
+        </member>
+        <member name="F:DBreezeBased.DocumentsStorage.Storage.MaxQuantityOfWordsToBeSearched">
+            <summary>
+            Default is 10. MaxQuantityOfWordsToBeSearched via SearchDocumentSpace
             </summary>
         </member>
         <member name="E:DBreezeBased.DocumentsStorage.Storage.OnProcessingStarted">
@@ -432,6 +443,16 @@
             <param name="createIfNotFound"></param>
             <returns></returns>
         </member>
+        <member name="M:DBreezeBased.DocumentsStorage.Storage.GetDocumentSpaceId(System.String,System.Boolean,DBreeze.Transactions.Transaction)">
+            <summary>
+            Note DocumentsStorageTablesPrefix + "m" must be sysnchronized
+            Returns DocumentSpaceId (internally opens new transaction)
+            </summary>
+            <param name="documentSpace"></param>
+            <param name="createIfNotFound"></param>
+            <param name="tran"></param>
+            <returns></returns>
+        </member>
         <member name="M:DBreezeBased.DocumentsStorage.Storage.GetDocumentByExternalID(System.String,System.String,System.Boolean,System.Boolean)">
             <summary>
             Can return null, if not found.
@@ -511,11 +532,13 @@
             <param name="sequentialId"></param>
             <returns></returns>
         </member>
-        <member name="M:DBreezeBased.DocumentsStorage.Storage.SearchDocumentSpace(DBreezeBased.DocumentsStorage.SearchRequest)">
+        <member name="M:DBreezeBased.DocumentsStorage.Storage.SearchDocumentSpace(DBreezeBased.DocumentsStorage.SearchRequest,DBreeze.Transactions.Transaction)">
             <summary>
-            
+            If is called from transaction, then tran must be supplied
             </summary>
             <param name="req"></param>
+            <param name="tran"></param>
+            <returns></returns>
         </member>
         <member name="M:DBreezeBased.DocumentsStorage.Storage.PrepareSearchKeyWords(System.String)">
             <summary>
@@ -585,7 +608,7 @@
         </member>
         <member name="M:DBreezeBased.DocumentsStorage.WAH2.TextSearch_AND_logic(System.Collections.Generic.List{System.Byte[]})">
             <summary>
-            
+            Returns last added documents first
             </summary>
             <param name="indexesToCheck"></param>
             <returns></returns>
