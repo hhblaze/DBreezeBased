@@ -83,7 +83,7 @@ namespace DBreezeBased.Compression
                 {
                     using (gz = new System.IO.Compression.GZipStream(ms, System.IO.Compression.CompressionMode.Decompress))
                     {
-                        int a = 0;
+                        int a = 0;                        
                         while ((a = gz.Read(Ob, 0, length)) > 0)
                         {
                             if (a == length)
