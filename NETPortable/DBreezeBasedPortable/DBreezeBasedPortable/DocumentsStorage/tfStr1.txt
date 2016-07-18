@@ -1,0 +1,1570 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+//using System.Threading.Tasks;
+
+using DBreeze;
+using DBreeze.Utils;
+using DBreezeBased.Serialization;
+using DBreezeBased.Compression;
+
+
+namespace DBreezeBased.DocumentsStorage
+{
+    /// <summary>
+    /// Main class to start DocumentsStorage operations
+    /// </summary>
+    public class Storage
+    {
+        const string MyName = "DBreezeBased.DocumentsStorage.Storage";
+        /// <summary>
+        /// Default dcstr. Tables concerning DBreezeBased.DocumentsStorage will start from this prefix
+        /// </summary>
+        public string DocumentsStorageTablesPrefix = "dcstr";
+
+        /// <summary>
+        /// Minimal lenght of the search word among the document.
+        /// Document searchables will be prepared due to this value
+        /// </summary>
+        public int SearchWordMinimalLength = 2;
+
+        /// <summary>
+        /// DBreeze engine must be supplied
+        /// </summary>
+        internal DBreezeEngine DBreezeEngine = null;
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="methodName"></param>
+        /// <param name="content"></param>
+        internal Exception ThrowException(string methodName, string content)
+        {
+            return new Exception(String.Format("{0}.{1}: {2}",MyName,methodName,content));
+        }
+
+        System.Timers.Timer tmr = null;
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="DBreezeEngine"></param>
+        public Storage(DBreezeEngine DBreezeEngine)
+        {
+            if (DBreezeEngine == null)
+                throw ThrowException("Storage", "DBreezeEngine must be instantiated"); 
+            //if(SearchWordMinimalLength < 1)
+            //    throw ThrowException("Storage", "SearchWordMinimalLength must be > 0");
+            //if (DocumentsStorageTablesPrefix.Length < 1)
+            //    throw ThrowException("Storage", "DocumentsStorageTablesPrefix.Length must be > 0");
+
+            this.DBreezeEngine = DBreezeEngine;
+
+            //To avoid recursive calls of calculation function
+            tmr = new System.Timers.Timer();
+            tmr.Interval = 100;
+            tmr.Elapsed += tmr_Elapsed;
+
+            StartDocumentIndexing();
+          
+        }
+
+        void tmr_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
+        {
+            tmr.Stop();
+            //Running unfinished processing job (runs in a new thread, if necessary)            
+            StartDocumentIndexing();
+        }
+
+
+        class I1
+        {
+            public DBreeze.DataTypes.NestedTable dt { get; set; }   //document table
+            public DBreeze.DataTypes.NestedTable vt { get; set; }   //version table
+            public DBreeze.DataTypes.NestedTable et { get; set; }   //externalID table
+            public int MaxDocId = 0;
+            public string DocTableName = "";
+
+        }
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="doc"></param>
+        /// <returns>Must return internal documentID, if 0 then mistake</returns>
+        public void AddDocuments(List<Document> docs)
+        {
+            
+            try
+            {
+                if (docs == null)
+                    throw ThrowException("AddDocuments", "supplied document is null");
+
+                if (docs.Count() == 0)
+                    return; 
+        
+
+                HashSet<string> syncroTables = new HashSet<string>();
+
+                using (var tran = DBreezeEngine.GetTransaction())
+                {
+                    tran.SynchronizeTables(DocumentsStorageTablesPrefix + "m");
+                    var mt = tran.InsertTable<int>(DocumentsStorageTablesPrefix + "m", 1, 0);
+                    long maxDocSpaceId = tran.Select<int, long>(DocumentsStorageTablesPrefix + "m", 2).Value;
+
+                    foreach (var doc in docs)
+                    {
+                        if (String.IsNullOrEmpty(doc.Documentspace))
+                            throw ThrowException("AddDocuments", "supplied Document Space can't be empty");
+                        if (String.IsNullOrEmpty(doc.Searchables))
+                            throw ThrowException("AddDocuments", "Document Searchables can't be empty");
+                        if (doc.Searchables.Length > 10000000)
+                            throw ThrowException("AddDocuments", "Document Searchables is bigger then 10MLN symbols");
+
+                        doc.DocumentSpaceId = mt.Select<string, long>(doc.Documentspace).Value;
+
+                        if (doc.DocumentSpaceId == 0)
+                        {
+                            //Creating document space
+                            maxDocSpaceId++;
+                            doc.DocumentSpaceId = maxDocSpaceId;
+                            tran.Insert<int, long>(DocumentsStorageTablesPrefix + "m", 2, maxDocSpaceId);
+                            mt.Insert<string, long>(doc.Documentspace, doc.DocumentSpaceId);
+                        }
+
+                        if (!syncroTables.Contains(DocumentsStorageTablesPrefix + "d" + doc.DocumentSpaceId.ToString()))
+                        {
+                            syncroTables.Add(DocumentsStorageTablesPrefix + "d" + doc.DocumentSpaceId.ToString());
+                        }
+                    }
+
+                    tran.Commit();
+                }
+                
+                //-----------------------------------------------------------------------------------------
+               
+                //Document space Id, help tables for storing nested tables
+                Dictionary<long, I1> h = new Dictionary<long, I1>();
+                byte[] serDoc = null;
+                byte[] btDoc = null;
+
+                using (var tran = DBreezeEngine.GetTransaction())
+                {
+                    //string docTable = DocumentsStorageTablesPrefix + "d" + docSpaceIdx.ToString();
+                    syncroTables.Add(DocumentsStorageTablesPrefix + "p");
+                    tran.SynchronizeTables(syncroTables.ToList());
+
+                    I1 dhl = null;
+                    foreach (var doc in docs)
+                    {
+                        if (!h.TryGetValue(doc.DocumentSpaceId, out dhl))
+                        {
+                            dhl = new I1()
+                            {
+                                DocTableName = DocumentsStorageTablesPrefix + "d" + doc.DocumentSpaceId.ToString()
+                            };
+
+                            //document table
+                            dhl.dt = tran.InsertTable<int>(dhl.DocTableName, 1, 0);
+                            //Version table Key is composite InitialDocId(int)+VersionNumber(int)+SequentialDocId(int)
+                            dhl.vt = tran.InsertTable<int>(dhl.DocTableName, 3, 0);
+                            dhl.et = tran.InsertTable<int>(dhl.DocTableName, 2, 0); //ExternalId to InternalId relation
+                            dhl.MaxDocId = tran.Select<int, int>(dhl.DocTableName, 4).Value;
+
+                            h[doc.DocumentSpaceId] = dhl;
+                        }
+                      
+
+                        //Increasing maximal docIndex in the docSpace
+                        dhl.MaxDocId++;
+                        tran.Insert<int, int>(dhl.DocTableName, 4, dhl.MaxDocId);
+
+                        //Saving doc content separately and repack instead SelectDirect link
+                        if (doc.Content != null)
+                        {
+                            //16 bytes link to Content
+                            doc.Content = dhl.dt.InsertDataBlock(null, doc.Content);
+                        }
+                        
+                        //Extra compressing searchables routine.
+                        if (!String.IsNullOrEmpty(doc.Searchables))
+                        {
+                            byte[] btSearchables = System.Text.Encoding.UTF8.GetBytes(doc.Searchables);
+                            byte[] btSearchablesZipped = btSearchables.CompressGZip();
+                            if (btSearchablesZipped.Length < btSearchables.Length)
+                                btSearchables = new byte[] { 1 }.Concat(btSearchablesZipped);
+                            else
+                                btSearchables = new byte[] { 0 }.Concat(btSearchables);
+
+                            doc.InternalStructure = dhl.dt.InsertDataBlock(null, btSearchables);
+
+                            //Now document is lightweight, without real content and searchables
+                            doc.Searchables = null;
+                        }
+
+
+                        doc.Deleted = false;
+                       
+
+                        if (!String.IsNullOrEmpty(doc.ExternalId))
+                        {
+                            //If externalID is supplied, we use it to retrieve internal id
+                            doc.InternalId = dhl.et.Select<string, int>(doc.ExternalId).Value;
+
+                            if (doc.InternalId == 0)
+                            {
+                                //New doc
+                                doc.DocumentSequentialId = dhl.MaxDocId;
+                                doc.InternalId = doc.DocumentSequentialId;
+                                dhl.et.Insert<string, int>(doc.ExternalId, doc.InternalId);                                                                
+                                //Inserting into version table                                
+                                dhl.vt.Insert<byte[], byte>(doc.InternalId.To_4_bytes_array_BigEndian().ConcatMany(((int)1).To_4_bytes_array_BigEndian(), doc.DocumentSequentialId.To_4_bytes_array_BigEndian()), 0);
+                            }
+                            else
+                            {
+                                //Updating document (we create new version)
+                                doc.DocumentSequentialId = dhl.MaxDocId;                                
+                                //Getting version number
+                                foreach (var row in dhl.vt.SelectBackwardFromTo<byte[], byte>(
+                                    doc.InternalId.To_4_bytes_array_BigEndian().ConcatMany(int.MaxValue.To_4_bytes_array_BigEndian(), int.MaxValue.To_4_bytes_array_BigEndian()), true, 
+                                    doc.InternalId.To_4_bytes_array_BigEndian().ConcatMany(int.MinValue.To_4_bytes_array_BigEndian(), int.MinValue.To_4_bytes_array_BigEndian()), true
+                                    ))
+                                {
+                                    //Inserting into version table, new version
+                                    dhl.vt.Insert<byte[], byte>(doc.InternalId.To_4_bytes_array_BigEndian().ConcatMany
+                                        (
+                                            (row.Key.Substring(4, 4).To_Int32_BigEndian() + 1).To_4_bytes_array_BigEndian(),
+                                            doc.DocumentSequentialId.To_4_bytes_array_BigEndian()
+                                        ), 0);
+                                    break;
+                                }
+
+                            }
+                        }
+                        else
+                        {
+                            if (doc.InternalId < 1)
+                            {
+                                //New doc
+                                doc.DocumentSequentialId = dhl.MaxDocId;
+                                doc.InternalId = doc.DocumentSequentialId;                                
+                                //Inserting into version table
+                                dhl.vt.Insert<byte[], byte>(doc.InternalId.To_4_bytes_array_BigEndian().ConcatMany(((int)1).To_4_bytes_array_BigEndian(), doc.DocumentSequentialId.To_4_bytes_array_BigEndian()), 0);
+                            }
+                            else
+                            {
+                                //Updating document (we create new version)
+                                doc.DocumentSequentialId = dhl.MaxDocId;                                
+                                //Getting version number
+                                foreach (var row in 
+                                    dhl.vt.SelectBackwardFromTo<byte[], byte>(
+                                    doc.InternalId.To_4_bytes_array_BigEndian().ConcatMany(int.MaxValue.To_4_bytes_array_BigEndian(), int.MaxValue.To_4_bytes_array_BigEndian()), true,
+                                    doc.InternalId.To_4_bytes_array_BigEndian().ConcatMany(int.MinValue.To_4_bytes_array_BigEndian(), int.MinValue.To_4_bytes_array_BigEndian()), true
+                                    ))
+                                {
+                                    //Inserting into version table, new version
+                                    dhl.vt.Insert<byte[], byte>(doc.InternalId.To_4_bytes_array_BigEndian().ConcatMany
+                                        (
+                                            (row.Key.Substring(4, 4).To_Int32_BigEndian() + 1).To_4_bytes_array_BigEndian(),
+                                            doc.DocumentSequentialId.To_4_bytes_array_BigEndian()
+                                        ), 0);
+                                    break;
+                                }
+                            }
+                        }
+
+                        serDoc = doc.SerializeProtobuf();
+                        btDoc = serDoc.CompressGZip();
+
+                        if (serDoc.Length >= btDoc.Length)
+                            btDoc = new byte[] { 1 }.Concat(btDoc);
+                        else
+                            btDoc = new byte[] { 0 }.Concat(serDoc);
+                        dhl.dt.Insert<int, byte[]>(doc.DocumentSequentialId, btDoc);
+
+                        //-----------------------------------------------------------------------------------------
+
+                        //Adding to processing table
+                        tran.Insert<byte[], byte>(DocumentsStorageTablesPrefix + "p", doc.DocumentSpaceId.To_8_bytes_array_BigEndian().Concat(doc.DocumentSequentialId.To_4_bytes_array_BigEndian()), 0);
+
+                    }//eo foreach
+                   
+                    tran.Commit();
+                }
+
+                //!!!!!!!!!!
+                //ProcessDocsAtOnce(false);
+
+                //return doc.InternalId;
+            }
+            catch (Exception ex)
+            {
+                throw ThrowException("AddDocuments", ex.ToString());
+            }
+        }
+
+        /// <summary>
+        /// Start document indexing
+        /// </summary>
+        public void StartDocumentIndexing()
+        {
+            lock (lock_inProcessDocs)
+            {
+                if (inProcessDocs)
+                    return;
+            }
+
+            System.Threading.Thread tr = new System.Threading.Thread(new System.Threading.ThreadStart(ProcessDocsAtOnce));
+            tr.Start();            
+
+            //ProcessDocsAtOnce(false);
+        }
+
+        class I2
+        {
+            public byte[] PReference = null;
+            /// <summary>
+            /// Can be null
+            /// </summary>
+            public Document doc = null;
+            /// <summary>
+            /// Flag (if not null) indicates that we must remove document from the search and clean VersionTable
+            /// </summary>
+            public byte[] VersionDocumentToRemove = null;
+        }
+
+        bool inProcessDocs = false;
+        object lock_inProcessDocs = new object();
+        
+
+        /// <summary>
+        /// 
+        /// </summary>
+        //void ProcessDocsAtOnce(bool selfCall)
+        //void ProcessDocsAtOnce(object oSelfCall)
+        void ProcessDocsAtOnce()
+        {
+            lock (lock_inProcessDocs)
+            {
+                if (inProcessDocs)
+                    return;
+                inProcessDocs = true;
+            }
+
+            //bool selfCall = (bool)oSelfCall;
+            //if (!selfCall)
+            //{
+            //    lock (lock_inProcessDocs)
+            //    {
+            //        if (inProcessDocs)
+            //            return;
+            //        inProcessDocs = true;
+            //    }
+            //}
+
+            List<I2> docsToBeProcessed = new List<I2>();
+
+            try
+            {
+                long docSpaceId = 0;
+                DBreeze.DataTypes.NestedTable dt = null;
+                DBreeze.DataTypes.NestedTable vt = null;    //Version table
+                string DocTableName = "";
+                byte[] btDoc = null;
+                Document doc = null;
+                Document docVersion = null;
+                int maxLettersToProcessPerRound = 10000000;
+                //int maxLettersToProcessPerRound = 5000000;
+                int ProcessedLetters = 0;
+                byte[] documentVersionToRemove = null;
+                byte[] btSearchanbles = null;
+
+                //Getting documents to be processed
+                using (var tran = DBreezeEngine.GetTransaction())
+                {
+                    Console.WriteLine("P has " + tran.Count(DocumentsStorageTablesPrefix + "p"));
+
+                    foreach (var row in tran.SelectForward<byte[], byte>(DocumentsStorageTablesPrefix + "p").Take(10000))
+                    {
+                        if (ProcessedLetters > maxLettersToProcessPerRound)
+                        {
+                            //We must start procedure of saving
+                            break;
+                        }
+
+                        var thisDocSpaceId = row.Key.Substring(0,8).To_Int64_BigEndian();
+                        var thisDocId = row.Key.Substring(8,4).To_Int32_BigEndian();
+                        
+                        if (docSpaceId > 0 && docSpaceId != thisDocSpaceId)
+                        {
+                            //This is not that docSpaceId we have started here
+                            continue;
+                        }
+                        else
+                        {
+                            //Collecting documents to be processed
+                            docSpaceId = thisDocSpaceId;
+
+                            //Reading document
+                            if (dt == null)
+                            {
+                                //reading first time
+                                DocTableName = DocumentsStorageTablesPrefix + "d" + thisDocSpaceId.ToString();
+                                dt = tran.SelectTable<int>(DocTableName, 1, 0);
+                                vt = tran.SelectTable<int>(DocTableName, 3, 0);
+
+                            }
+
+                            var rowbtDoc = dt.Select<int, byte[]>(thisDocId);
+                            if (!rowbtDoc.Exists)
+                            {
+                                //We can't retrieve document, just skip and must be deleted in ProcessDocsBlock
+                                docsToBeProcessed.Add(new I2() { PReference = row.Key });
+                                continue;
+                            }
+
+                            btDoc = rowbtDoc.Value;
+
+                            if (btDoc[0] == 0)
+                                doc = btDoc.Substring(1).DeserializeProtobuf<Document>();
+                            else
+                                doc = btDoc.Substring(1).DecompressGZip().DeserializeProtobuf<Document>();
+
+                            documentVersionToRemove = null;
+
+                            //Trying to get previous version of this document                            
+                            //foreach (var versionRow in vt.SelectBackwardStartFrom<byte[], byte>(doc.InternalId.To_4_bytes_array_BigEndian().ConcatMany(int.MaxValue.To_4_bytes_array_BigEndian(), int.MaxValue.To_4_bytes_array_BigEndian()), true, true))
+
+                            //Iterating through versions, removing old ones and adding current ones
+                            foreach (var versionRow in 
+                                vt.SelectForwardFromTo<byte[], byte>(
+                                    doc.InternalId.To_4_bytes_array_BigEndian().ConcatMany(int.MinValue.To_4_bytes_array_BigEndian(), int.MinValue.To_4_bytes_array_BigEndian()),true,
+                                    doc.InternalId.To_4_bytes_array_BigEndian().ConcatMany(int.MaxValue.To_4_bytes_array_BigEndian(), int.MaxValue.To_4_bytes_array_BigEndian()),true)
+                                    )
+
+                            {
+                                rowbtDoc = dt.Select<int, byte[]>(versionRow.Key.Substring(8, 4).To_Int32_BigEndian());
+                                //It must exist
+                                btDoc = rowbtDoc.Value;
+
+                                if (btDoc[0] == 0)
+                                    docVersion = btDoc.Substring(1).DeserializeProtobuf<Document>();
+                                else
+                                    docVersion = btDoc.Substring(1).DecompressGZip().DeserializeProtobuf<Document>();
+
+                                btSearchanbles = dt.SelectDataBlock(doc.InternalStructure);
+
+                                //Getting searchables
+                                if (btSearchanbles[0] == 0)
+                                {
+                                    //Not compressed
+                                    docVersion.Searchables = System.Text.Encoding.UTF8.GetString(btSearchanbles.Substring(1));
+                                }
+                                else
+                                {
+                                    //Compressed
+                                    docVersion.Searchables = System.Text.Encoding.UTF8.GetString(btSearchanbles.Substring(1).DecompressGZip());
+                                }
+
+                                ProcessedLetters += docVersion.Searchables.Length;
+
+                                documentVersionToRemove = null;
+
+                                if (versionRow.Key.Substring(8, 4).To_Int32_BigEndian() != doc.DocumentSequentialId)
+                                {                                    
+                                    documentVersionToRemove = versionRow.Key;                                    
+                                }
+
+                                //inserting into docsToBeProcessed.Add(new I2() { PReference = row.Key });
+                                docsToBeProcessed.Add(new I2() { PReference = row.Key, doc = docVersion, VersionDocumentToRemove = documentVersionToRemove });                                 
+                            }
+
+                        }
+                    }//eo foreach
+
+                }
+            }
+            catch (Exception ex)
+            {
+
+            }
+
+            if (docsToBeProcessed.Count() == 0)
+            {
+                lock (lock_inProcessDocs)
+                {
+                    inProcessDocs = false;
+                }
+            }
+            else
+            {
+                ProcessDocsBlock(docsToBeProcessed);
+
+                //if (selfCall)
+                //    ProcessDocsBlock(docsToBeProcessed);
+                //else
+                //{
+                //    System.Threading.Thread tr = new System.Threading.Thread(new System.Threading.ParameterizedThreadStart(ProcessDocsBlock));
+                //    tr.Start(docsToBeProcessed);
+                //}
+            }
+        }
+
+        class WordInDoc
+        {
+            /// <summary>
+            /// Docs which contain this word
+            /// </summary>
+            public HashSet<int> docsAdded = new HashSet<int>();
+            /// <summary>
+            /// Docs which must be removed from word WAH
+            /// </summary>
+            public HashSet<int> docsRemoved = new HashSet<int>();
+            public int BlockId = 0;
+            public int NumberInBlock = 0;
+            public bool ExistsInDb = false;
+            public int foundOrigin = 0;
+            public WAH2 wah = null;
+            public int blockLength = 0;
+        }
+
+        int QuantityOfWordsInBlock = 1000;
+        int MinimalBlockReservInBytes = 100000;
+
+      
+
+        /// <summary>
+        /// 
+        /// </summary>
+        void ProcessDocsBlock(object docsToBeProcessed)
+        {
+            try
+            {                
+
+                List<I2> i2s = (List<I2>)docsToBeProcessed;
+                System.Diagnostics.Stopwatch sw = new System.Diagnostics.Stopwatch();
+                sw.Start();
+
+                Console.WriteLine("ProcessDocsBlock started with {0} elements", i2s.Count());
+
+                System.Diagnostics.Stopwatch swSelect = new System.Diagnostics.Stopwatch();
+                System.Diagnostics.Stopwatch swInsert = new System.Diagnostics.Stopwatch();
+
+                //Dictionary<string, WAH2> wahs = new Dictionary<string, WAH2>();
+                WAH2 wah = null;
+                byte[] val = null;
+                int uniqueWordsFound = 0;
+
+                WordInDoc wd = null;
+                Dictionary<string, WordInDoc> wds = new Dictionary<string, WordInDoc>();
+
+                using (var tran = DBreezeEngine.GetTransaction())
+                {
+                    string docTable = DocumentsStorageTablesPrefix + "d" + i2s.First().doc.DocumentSpaceId.ToString();
+                    string searchTable = DocumentsStorageTablesPrefix + "s" + i2s.First().doc.DocumentSpaceId.ToString();
+
+                    tran.SynchronizeTables(
+                      docTable,
+                      searchTable,
+                      DocumentsStorageTablesPrefix + "p"
+                      );
+
+                    //Getting version table
+                    var vt = tran.InsertTable<int>(docTable, 3, 0);
+
+                    //Setting WAH index table
+                    var tbOneWordWAH = tran.InsertTable<int>(searchTable, 2, 0);
+                    tbOneWordWAH.ValuesLazyLoadingIsOn = false;
+                    tbOneWordWAH.Technical_SetTable_OverwriteIsNotAllowed();
+
+                    //Nested table with blocks
+                    var tbBlocks = tran.InsertTable<int>(searchTable, 10, 0);   //Overwrite is needed
+                    tbBlocks.ValuesLazyLoadingIsOn = false;
+
+
+                    int currentBlock = tran.Select<int, int>(searchTable, 11).Value;
+                    int numberInBlock = tran.Select<int, int>(searchTable, 12).Value;
+
+                    if (currentBlock == 0)
+                    {
+                        numberInBlock = 0;
+                        currentBlock = 1;
+                    }
+
+                    bool DocumentIsAdded = true;
+                    
+                    foreach (var i2 in i2s)
+                    {
+                        //Removing from "p"
+                        tran.RemoveKey<byte[]>(DocumentsStorageTablesPrefix + "p", i2.PReference);
+                        //Removing from Version table
+
+                        DocumentIsAdded = true;
+                        if (i2.VersionDocumentToRemove != null)
+                        {
+                            vt.RemoveKey<byte[]>(i2.VersionDocumentToRemove);
+                            DocumentIsAdded = false;
+                        }
+
+                        //doc can be null
+                        if (i2.doc == null || i2.doc.Deleted)
+                            continue;
+                        
+
+                        var wordsCounter = GetWordsDefinitionFromText(i2.doc.Searchables);
+
+                        foreach (var el in wordsCounter.OrderBy(r => r.Key))
+                        {
+                            //Trying to get from Dictionary
+                            if (!wds.TryGetValue(el.Key, out wd))
+                            {
+                                //getting from db
+                                swSelect.Start();
+                                var row1 = tbOneWordWAH.Select<string, byte[]>(el.Key, true);
+                                swSelect.Stop();
+
+                                if (row1.Exists)
+                                {
+                                    val = row1.Value;
+
+                                    wd = new WordInDoc()
+                                    {                                        
+                                        BlockId = val.Substring(0,4).To_Int32_BigEndian(),
+                                        NumberInBlock = val.Substring(4, 4).To_Int32_BigEndian(),
+                                        ExistsInDb = true   //We don't need to save this word again (only its WAH in block)
+                                        
+                                    };                                  
+                                }
+                                else
+                                {
+                                    numberInBlock++;
+
+                                    if (numberInBlock > QuantityOfWordsInBlock)  //Quantity of words (WAHs) in block
+                                    {
+                                        currentBlock++;
+                                        numberInBlock = 1;
+                                    }
+
+                                    wd = new WordInDoc()
+                                    {   
+                                        BlockId = currentBlock,
+                                        NumberInBlock = numberInBlock,
+                                    };
+
+                                   // Console.WriteLine(el.Key + " " + wd.NumberInBlock);
+
+                                    uniqueWordsFound++;
+                                }
+                            }
+                          
+                            //Adding to wah document id
+                            if (DocumentIsAdded)
+                            {
+                                if (!wd.docsAdded.Contains(i2.doc.DocumentSequentialId))
+                                    wd.docsAdded.Add(i2.doc.DocumentSequentialId);
+                            }
+                            else
+                            {
+                                if (!wd.docsRemoved.Contains(i2.doc.DocumentSequentialId))
+                                    wd.docsRemoved.Add(i2.doc.DocumentSequentialId);
+                            }
+
+                            //Applying it to the memory wah storage
+                            wds[el.Key] = wd;
+
+                        }//eo foreach words in document
+
+
+                    }//eo foreach documnent
+
+                    
+                    //Inserting new words
+                    foreach (var wd1 in wds.OrderBy(r => r.Key))
+                    {
+                        if (!wd1.Value.ExistsInDb)
+                        {
+                            swInsert.Start();
+                            //Console.WriteLine("{0} {1}", wd1.Key, wd1.Value.NumberInBlock);
+                            tbOneWordWAH.Insert<string, byte[]>(wd1.Key, wd1.Value.BlockId.To_4_bytes_array_BigEndian().Concat(wd1.Value.NumberInBlock.To_4_bytes_array_BigEndian()));
+                            swInsert.Stop();
+                        }
+                    }
+                    
+                    //Inserting WAH blocks
+                    //Going through the list of collected words order by blockID, fill blocks and save them
+                    int iterBlockId = 0;
+                    int iterBlockLen = 0;
+                    int blockSize = 0;
+                    byte[] btBlock = null;
+                    Dictionary<int, byte[]> block = new Dictionary<int, byte[]>();
+                    byte[] btWah = null;
+                    byte[] tmp = null;
+
+                    foreach (var wd1 in wds.OrderBy(r => r.Value.BlockId))
+                    {
+
+                        //reading block if it's not loaded
+                        if (wd1.Value.BlockId != iterBlockId)
+                        {
+                            if (iterBlockId > 0)
+                            {
+                                //We must save current datablock
+                                if (block.Count() > 0)
+                                {                                   
+
+                                    btBlock = block.SerializeProtobuf();
+                                    btBlock = btBlock.CompressGZip();
+
+                                   // Console.WriteLine("Block {0} Len {1}",iterBlockId, btBlock.Length);
+
+
+                                    if ((btBlock.Length + 4) < MinimalBlockReservInBytes)    //Minimal reserv
+                                    {
+                                        tmp = new byte[MinimalBlockReservInBytes];
+                                        tmp.CopyInside(0, btBlock.Length.To_4_bytes_array_BigEndian());
+                                        tmp.CopyInside(4, btBlock);
+                                    }
+                                    else if ((btBlock.Length + 4) > iterBlockLen)
+                                    {
+                                        //Doubling reserve
+                                        tmp = new byte[btBlock.Length * 2];
+                                        tmp.CopyInside(0, btBlock.Length.To_4_bytes_array_BigEndian());
+                                        tmp.CopyInside(4, btBlock);
+                                    }
+                                    else
+                                    {
+                                        //Filling existing space
+                                        tmp = new byte[btBlock.Length + 4];
+                                        tmp.CopyInside(0, btBlock.Length.To_4_bytes_array_BigEndian());
+                                        tmp.CopyInside(4, btBlock);
+                                    }
+
+                                    //Saving into DB
+                                    swInsert.Start();
+                                    tbBlocks.Insert<int, byte[]>(iterBlockId, tmp);
+                                    swInsert.Stop();
+                                }
+
+                                block = null;
+                            }
+
+                            val = tbBlocks.Select<int, byte[]>(wd1.Value.BlockId).Value;
+                            iterBlockId = wd1.Value.BlockId;
+                            iterBlockLen = val == null ? 0 : val.Length;
+
+                            if (val != null)
+                            {
+                                blockSize = val.Substring(0, 4).To_Int32_BigEndian();
+                                if (blockSize > 0)
+                                {
+                                    btBlock = val.Substring(4, blockSize);
+                                    btBlock = btBlock.DecompressGZip();
+                                    block = btBlock.DeserializeProtobuf<Dictionary<int, byte[]>>();
+                                }
+                                else
+                                    block = new Dictionary<int, byte[]>();
+                            }
+                            else
+                                block = new Dictionary<int, byte[]>();
+                        }
+
+                        //Getting from Block 
+                        if (block.TryGetValue(wd1.Value.NumberInBlock, out btWah))
+                        {
+                            wah = new WAH2(btWah);
+                        }
+                        else
+                            wah = new WAH2(null);
+
+                        //Adding documents
+                        foreach (var d in wd1.Value.docsAdded)
+                            wah.Add(d, true);
+
+                        //Removing documents
+                        foreach (var d in wd1.Value.docsRemoved)
+                            wah.Add(d, false);
+
+                        block[wd1.Value.NumberInBlock] = wah.GetCompressedByteArray();
+
+                    }//eo foreach
+
+
+                    //Saving last element
+                    if (block != null)
+                    {
+                        //saving current block
+                        if (block.Count() > 0)
+                        {
+                            //!!!!!!!!!!! Remake it for smoothing storage 
+                            btBlock = block.SerializeProtobuf();
+                            btBlock = btBlock.CompressGZip();
+
+                            if ((btBlock.Length + 4) < MinimalBlockReservInBytes)    //Minimal reserve
+                            {
+                                tmp = new byte[MinimalBlockReservInBytes];
+                                tmp.CopyInside(0, btBlock.Length.To_4_bytes_array_BigEndian());
+                                tmp.CopyInside(4, btBlock);
+                            }
+                            else if ((btBlock.Length + 4) > iterBlockLen)
+                            {
+                                //Doubling reserve
+                                tmp = new byte[btBlock.Length * 2];
+                                tmp.CopyInside(0, btBlock.Length.To_4_bytes_array_BigEndian());
+                                tmp.CopyInside(4, btBlock);
+                            }
+                            else
+                            {
+                                //Filling existing space
+                                tmp = new byte[btBlock.Length + 4];
+                                tmp.CopyInside(0, btBlock.Length.To_4_bytes_array_BigEndian());
+                                tmp.CopyInside(4, btBlock);
+                            }                        
+
+                            //Saving into DB
+                            swInsert.Start();
+                            tbBlocks.Insert<int, byte[]>(iterBlockId, tmp);
+                            swInsert.Stop();
+                        }
+
+                        block = null;
+                    }
+
+                    tran.Insert<int, int>(searchTable, 11,currentBlock);
+                    tran.Insert<int, int>(searchTable, 12, numberInBlock);
+                    
+                    tran.Commit();
+                }//eo tran
+
+                sw.Stop();
+                Console.WriteLine("Processed {0} documents in DocuSpace {1} and {3} words. Took {2} ms, Select {4} ms; Insert {5} ms; UniqueWords: {6}", i2s.Count(), i2s.First().doc.DocumentSpaceId, sw.ElapsedMilliseconds, wds.Count(),swSelect.ElapsedMilliseconds,swInsert.ElapsedMilliseconds,uniqueWordsFound);
+
+            }
+            catch (Exception ex)
+            {
+              //  throw ThrowException("ProcessDocsBlock", ex.ToString());
+            }
+            finally
+            {
+
+            }
+
+            Console.WriteLine("ProcessDocsBlock finished");
+           // ProcessDocsAtOnce(true);
+            lock (lock_inProcessDocs)
+            {
+                inProcessDocs = false;
+            }
+
+            tmr.Start();
+        }
+               
+
+        [ProtoBuf.ProtoContract]
+        class Word
+        {
+            [ProtoBuf.ProtoMember(1, IsRequired = true)]
+            public byte[] WAH2 { get; set; }
+        }
+        
+        /// <summary>
+        /// 
+        /// </summary>        
+        class WordDefinition
+        {            
+            public uint CountInDocu = 0;
+        }
+
+        /// <summary>
+        /// Returns null in case of notfound anything or what ever
+        /// </summary>
+        /// <param name="file"></param>
+        /// <returns></returns>
+        Dictionary<string, WordDefinition> GetWordsDefinitionFromText(string text)
+        {
+            try
+            {
+                if (String.IsNullOrEmpty(text))
+                    return null;
+
+                StringBuilder sb = new StringBuilder();
+                string word = "";
+                WordDefinition wordDefinition = null;
+                Dictionary<string, WordDefinition> wordsCounter = new Dictionary<string, WordDefinition>();
+
+                Action processWord = () =>
+                {
+                    //We take all words, so we can later find even by email address jj@gmx.net ... we will need jj and gmx.net
+                    if (sb.Length > 0)
+                    {
+                        word = sb.ToString().ToLower();
+
+                        List<string> wrds = new List<string>();
+                        wrds.Add(word);
+                        int i=1;
+
+                        if (this.SearchWordMinimalLength > 0)   //If equals to 0, we store only words for full text search
+                        {
+                            while (word.Length - i >= this.SearchWordMinimalLength)
+                            {
+                                wrds.Add(word.Substring(i));
+                                i++;
+                            }
+                        }
+
+                        foreach (var w in wrds)
+                        {
+                            if (wordsCounter.TryGetValue(w, out wordDefinition))
+                            {
+                                wordDefinition.CountInDocu++;
+                            }
+                            else
+                            {
+                                wordDefinition = new WordDefinition() { CountInDocu = 1 };
+                                wordsCounter[w] = wordDefinition;
+                            }
+                        }
+                        
+                    }
+
+                    if(sb.Length>0)
+                        sb.Remove(0, sb.Length);
+                    //sb.Clear();
+                };
+
+                foreach (var c in text)
+                {
+                    if (Char.IsLetterOrDigit(c) || Char.IsSymbol(c))
+                    {
+                        sb.Append(c);
+                    }
+                    else
+                    {
+                        //Processing ready word
+                        processWord();
+                    }
+                }
+
+                //Processing last word
+                processWord();
+
+                if (wordsCounter.Count() > 0)
+                    return wordsCounter;
+            }
+            catch (System.Exception ex)
+            {
+              
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Can return null, if not found
+        /// </summary>
+        /// <param name="externalId"></param>
+        /// <returns></returns>
+        public Document GetDocumentByExternalID(string documentSpace, string externalId)
+        {
+            try
+            {
+                if (String.IsNullOrEmpty(documentSpace) || String.IsNullOrEmpty(externalId))
+                    return null;    //Wrong parameters
+
+                using (var tran = DBreezeEngine.GetTransaction())
+                {
+                    //Getting document space index
+                    var mt = tran.SelectTable<int>(DocumentsStorageTablesPrefix + "m", 1, 0);
+                    var docSpaceId = mt.Select<string, long>(documentSpace).Value;
+
+                    if (docSpaceId == 0)
+                        return null;    //No such document space
+
+                    //Getting internalID through External ID
+                    string docTable = DocumentsStorageTablesPrefix + "d" + docSpaceId.ToString();
+                    var et = tran.SelectTable<int>(docTable, 2, 0); //ExternalId to InternalId relation
+                    int internalId = et.Select<string, int>(externalId).Value;
+
+                    if (internalId == 0)
+                        return null;    //No such document
+
+                    //Getting document using internalID
+                    var dt = tran.SelectTable<int>(docTable, 1, 0); //document table
+
+                    dt.ValuesLazyLoadingIsOn = false;
+                    var row = dt.Select<int, byte[]>(internalId);
+                    if(!row.Exists)
+                        return null;    //No such document
+
+                    byte[] btDoc = row.Value;
+                    Document doc = null;
+
+                    if (btDoc[0] == 0)
+                    {
+                        //Non compressed
+                        doc = btDoc.Substring(1).DeserializeProtobuf<Document>();
+                    }
+                    else
+                    {
+                        doc = btDoc.Substring(1).DecompressGZip().DeserializeProtobuf<Document>();
+                    }
+
+                    return doc;
+                }
+            }
+            catch (Exception ex)
+            {
+                
+            }
+            return null;
+        }
+
+        /// <summary>
+        ///  Can return null, if not found
+        /// </summary>
+        /// <param name="internalID"></param>
+        /// <returns></returns>
+        public Document GetDocumentByInternalID(string documentSpace, int internalId)
+        {
+            try
+            {
+                if (String.IsNullOrEmpty(documentSpace) || internalId < 1)
+                    return null;    //Wrong parameters
+
+                using (var tran = DBreezeEngine.GetTransaction())
+                {
+                    //Getting document space index
+                    var mt = tran.SelectTable<int>(DocumentsStorageTablesPrefix + "m", 1, 0);
+                    var docSpaceId = mt.Select<string, long>(documentSpace).Value;
+
+                    if (docSpaceId == 0)
+                        return null;    //No such document space
+
+                    string docTable = DocumentsStorageTablesPrefix + "d" + docSpaceId.ToString();
+                    
+                    //Getting document using internalID
+                    var dt = tran.SelectTable<int>(docTable, 1, 0); //document table
+
+                    dt.ValuesLazyLoadingIsOn = false;
+                    var row = dt.Select<int, byte[]>(internalId);
+                    if (!row.Exists)
+                        return null;    //No such document
+
+                    byte[] btDoc = row.Value;
+                    Document doc = null;
+
+                    if (btDoc[0] == 0)
+                    {
+                        //Non compressed
+                        doc = btDoc.Substring(1).DeserializeProtobuf<Document>();
+                    }
+                    else
+                    {
+                        doc = btDoc.Substring(1).DecompressGZip().DeserializeProtobuf<Document>();
+                    }
+
+                    return doc;
+                }
+            }
+            catch (Exception ex)
+            {
+
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// RemoveDocumentByExternalID
+        /// </summary>
+        /// <param name="externalID"></param>
+        public void RemoveDocumentByExternalID(string documentSpace, string externalId)
+        {
+            try
+            {
+                if (String.IsNullOrEmpty(documentSpace) || String.IsNullOrEmpty(externalId))
+                    return;    //Wrong parameters
+                              
+
+                using (var tran = DBreezeEngine.GetTransaction())
+                {
+                    //Getting document space index
+                    var mt = tran.SelectTable<int>(DocumentsStorageTablesPrefix + "m", 1, 0);
+                    var docSpaceId = mt.Select<string, long>(documentSpace).Value;
+
+                    if (docSpaceId == 0)
+                        return;    //No such document space
+
+                    string docTable = DocumentsStorageTablesPrefix + "d" + docSpaceId.ToString();
+
+                    tran.SynchronizeTables(docTable);
+
+                    //Getting internalID through External ID
+                    
+                    var et = tran.InsertTable<int>(docTable, 2, 0); //ExternalId to InternalId relation
+                    int internalId = et.Select<string, int>(externalId).Value;
+
+                    if (internalId == 0)
+                        return;    //No such document
+
+                    //Getting document using internalID
+                    var dt = tran.InsertTable<int>(docTable, 1, 0); //document table
+                    var vt = tran.InsertTable<int>(docTable, 3, 0); //Version table Key
+
+                    //Removing all versions of the doc table
+                    foreach (var vtRow in vt.SelectForwardFromTo<byte[], byte>
+                        (
+                        internalId.To_4_bytes_array_BigEndian().ConcatMany(int.MinValue.To_4_bytes_array_BigEndian(),int.MinValue.To_4_bytes_array_BigEndian()),true,
+                        internalId.To_4_bytes_array_BigEndian().ConcatMany(int.MaxValue.To_4_bytes_array_BigEndian(),int.MaxValue.To_4_bytes_array_BigEndian()),true
+                        ,true
+                        ))
+                    {
+                        vt.RemoveKey<byte[]>(vtRow.Key);
+                    }
+
+                    //Removing External to Internal link
+                    et.RemoveKey<string>(externalId);
+                    //Removing document
+                    dt.RemoveKey<int>(internalId);
+
+                    tran.Commit();
+                }
+            }
+            catch (Exception ex)
+            {
+
+            }           
+        }
+
+        /// <summary>
+        /// RemoveDocumentByInternalID
+        /// </summary>
+        /// <param name="internalID"></param>
+        public void RemoveDocumentByInternalID(string documentSpace, int internalId)
+        {
+            try
+            {
+                if (String.IsNullOrEmpty(documentSpace) || internalId < 1)
+                    return;    //Wrong parameters
+
+
+                using (var tran = DBreezeEngine.GetTransaction())
+                {
+                    //Getting document space index
+                    var mt = tran.SelectTable<int>(DocumentsStorageTablesPrefix + "m", 1, 0);
+                    var docSpaceId = mt.Select<string, long>(documentSpace).Value;
+
+                    if (docSpaceId == 0)
+                        return;    //No such document space
+
+                    string docTable = DocumentsStorageTablesPrefix + "d" + docSpaceId.ToString();
+
+                    tran.SynchronizeTables(docTable);
+
+                    //Getting document using internalID
+                    var dt = tran.InsertTable<int>(docTable, 1, 0); //document table
+                    var vt = tran.InsertTable<int>(docTable, 3, 0); //Version table Key
+
+                    //Removing all versions of the doc table
+                    foreach (var vtRow in vt.SelectForwardFromTo<byte[], byte>
+                        (
+                        internalId.To_4_bytes_array_BigEndian().ConcatMany(int.MinValue.To_4_bytes_array_BigEndian(), int.MinValue.To_4_bytes_array_BigEndian()), true,
+                        internalId.To_4_bytes_array_BigEndian().ConcatMany(int.MaxValue.To_4_bytes_array_BigEndian(), int.MaxValue.To_4_bytes_array_BigEndian()), true
+                        , true
+                        ))
+                    {
+                        vt.RemoveKey<byte[]>(vtRow.Key);
+                    }
+
+                    //Removing document
+                    dt.RemoveKey<int>(internalId);
+
+                    tran.Commit();
+                }
+            }
+            catch (Exception ex)
+            {
+
+            }           
+        }
+
+
+        //Experiment. Size of 10K(134b), 30K(155b), 50K(176b), 100K (229b), 1MLN(1186b) documents as Compressed WAH
+        //Experiment. Size of Dictionary<int,byte[176]>, Key Id of the word, Value its WAH (reserved for 50000 documents). Block stores 50000 words definition for 50000 documents.
+        //  9300000b Protobuffed and 272316b also compressed
+
+        public void showX()
+        {
+
+
+
+            ////Experiment. Size of Dictionary<int,byte[176]>, Key Id of the word, Value its WAH (reserved for 50000 documents). Block stores 50000 words definition for 50000 documents.
+            //Dictionary<int, byte[]> dc = new Dictionary<int, byte[]>();
+            //WAH2 wh = new WAH2(null);
+            //bool v = true;
+            //for (int i = 0; i < 50000; i++)
+            //{
+            //    wh.Add(i, v);
+            //    v = !v;
+            //}
+            //byte[] cmp = wh.GetCompressedByteArray();
+
+            //for (int i = 0; i < 50000; i++)
+            //{
+            //    dc.Add(1000000 + i, cmp);
+            //}
+
+            //byte[] sr = dc.SerializeProtobuf(); //9300000
+            //byte[] arch = sr.CompressGZip();    //272316    //This we save into 300Kb reserved block
+
+            ////To store 1MLN of words we need 20 blocks
+
+            //return;
+
+            //Experiment. Size of 10K(134b), 30K(155b), 50K(176b), 100K (229b), 1MLN(1186b) documents as Compressed WAH
+            //WAH2 wh = new WAH2(null);
+            //bool v=true;
+            //for (int i = 0; i < 50000; i++)
+            //{
+            //    wh.Add(i, v);
+            //    v = !v;
+            //}
+            //byte[] cmp = wh.GetCompressedByteArray();
+            //return;
+
+
+
+            //using (var tran = DBreezeEngine.GetTransaction())
+            //{
+            //    //var tbOneWordWAH = tran.SelectTable<int>(DocumentsStorageTablesPrefix + "s" + "1", 2, 0);
+            //    //foreach (var row in tbOneWordWAH.SelectForwardStartsWith<string, byte[]>("енгерско"))
+            //    //{
+
+            //    //}
+
+            //    var td = tran.SelectTable<int>(DocumentsStorageTablesPrefix + "d" + "1", 1, 0);
+
+            //    foreach (var el in td.SelectForward<int, byte[]>())
+            //    {
+            //        var btDoc = el.Value;
+            //        Document doc = null;
+            //        if (btDoc[0] == 0)
+            //        {
+            //            //Non compressed
+            //            doc = btDoc.Substring(1).DeserializeProtobuf<Document>();
+            //        }
+            //        else
+            //        {
+            //            doc = btDoc.Substring(1).DecompressGZip().DeserializeProtobuf<Document>();
+            //        }
+
+            //        if (doc.DocumentName == "Емец-  Влюбленная мясорубка - 2007.txt")
+            //        {
+
+            //        }
+            //    }
+            //}
+        }
+                
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="req"></param>
+        public SearchResponse SearchDocumentSpace(SearchRequest req)
+        {
+            SearchResponse resp = new SearchResponse();
+            try
+            {
+                if (req == null || String.IsNullOrEmpty(req.DocumentSpace) || String.IsNullOrEmpty(req.SearchWords))
+                    return resp;
+
+                resp.DocumentSpace = req.DocumentSpace;
+
+                Dictionary<int, Document> dmnts = new Dictionary<int, Document>();
+
+                Action repack = () =>
+                {
+                    //Repacking dmnts into resp
+                    if (req.IncludeDocuments)
+                    {
+                        foreach (var el in dmnts)
+                        {
+                            resp.Documents.Add(el.Value);
+                        }
+                    }
+                    else
+                    {
+                        foreach (var el in dmnts)
+                        {
+                            resp.DocumentsInternalIds.Add(el.Key);
+                        }
+                    }
+                };
+
+                System.Diagnostics.Stopwatch sw = new System.Diagnostics.Stopwatch();
+                sw.Start();
+
+                using (var tran = DBreezeEngine.GetTransaction())
+                {
+                    var mt = tran.SelectTable<int>(DocumentsStorageTablesPrefix + "m", 1, 0);
+                    var docSpaceId = mt.Select<string, long>(req.DocumentSpace).Value;
+
+                    if (docSpaceId == 0)
+                        return resp;    //Not found document space
+
+
+                    var Words = this.PrepareSearchKeyWords(req.SearchWords);
+
+                    string docTable = DocumentsStorageTablesPrefix + "d" + docSpaceId.ToString();
+                    var vt = tran.SelectTable<int>(docTable, 3, 0); //Version table Key
+                    var dt = tran.SelectTable<int>(docTable, 1, 0); //Document table Key
+                    dt.ValuesLazyLoadingIsOn = !req.IncludeDocuments;
+
+                    DBreeze.DataTypes.Row<int, byte[]> docRow = null;
+                    Document doc = null;
+                    byte[] btDoc = null;
+                    int qOutput = 0;
+
+
+                    //-----------------------------------------------------------------   ONE/MULTIPLE WORDS SEARCH then one word is supplied, using AND/OR LOGIC
+
+                    #region "Multiple Words"
+
+                    int j = -1;
+                    List<byte[]> foundArrays = new List<byte[]>();
+                    List<byte[]> oneWordFoundArrays = new List<byte[]>();
+                    //WAH2 wh = null;
+                    var tbOneWordWAH = tran.SelectTable<int>(DocumentsStorageTablesPrefix + "s" + docSpaceId.ToString(), 2, 0);
+                    tbOneWordWAH.ValuesLazyLoadingIsOn = false;
+
+                    resp.UniqueWordsInDataSpace = (int)tbOneWordWAH.Count();
+
+                    bool anyWordFound = false;
+                    int totalFoundWords = 0;
+
+                    Dictionary<string, WordInDoc> words = new Dictionary<string, WordInDoc>();
+                    int foundOrigin = 1;
+
+                    foreach (var word in Words)
+                    {
+                        anyWordFound = false;
+                        totalFoundWords = 0;
+
+                        foreach (var row1 in tbOneWordWAH.SelectForwardStartsWith<string, byte[]>(word))
+                        {
+                            anyWordFound = true;
+                            totalFoundWords++;
+
+                            //if (totalFoundWords > 1000)
+                            if (totalFoundWords > 1000)  //Found lots of words with such mask inside
+                            {
+                                //Too much found docs have this word part inside, better to enhance search
+                                break;
+                            }
+                            words.Add(row1.Key, new WordInDoc()
+                            {
+                                 BlockId = row1.Value.Substring(0,4).To_Int32_BigEndian(),
+                                 NumberInBlock = row1.Value.Substring(4, 4).To_Int32_BigEndian(),
+                                 foundOrigin = foundOrigin
+                            });
+                        }
+
+                        foundOrigin++;
+
+                        if (
+                            req.SearchLogicType == SearchRequest.eSearchLogicType.AND
+                            &&
+                            !anyWordFound
+                            )
+                        {
+                            //Non of words found corresponding to AND logic
+                            sw.Stop();
+                            resp.SearchDurationMs = sw.ElapsedMilliseconds;
+                            return resp;
+                        }
+                    }
+
+
+                    //Here we must start get data from blocks
+                    //Nested table with blocks
+                    var tbBlocks = tran.SelectTable<int>(DocumentsStorageTablesPrefix + "s" + docSpaceId.ToString(), 10, 0);
+                    tbBlocks.ValuesLazyLoadingIsOn = false;
+
+                    Dictionary<int,byte[]> block=null;
+                    byte[] btBlock=null;
+                    int currentBlockId = 0;
+
+                    //DBreeze.Diagnostic.SpeedStatistic.StartCounter("LoadBlocks");
+                        
+                    foreach (var wrd in words.OrderBy(r=>r.Value.BlockId))
+                    {
+                        if (currentBlockId != wrd.Value.BlockId)
+                        {
+                            currentBlockId = wrd.Value.BlockId;
+
+                            //DBreeze.Diagnostic.SpeedStatistic.StartCounter("SelectBlocks");
+                            btBlock = tbBlocks.Select<int, byte[]>(wrd.Value.BlockId).Value;
+                            //DBreeze.Diagnostic.SpeedStatistic.StopCounter("SelectBlocks");
+
+                            
+                            btBlock = btBlock.Substring(4, btBlock.Substring(0, 4).To_Int32_BigEndian());
+                            DBreeze.Diagnostic.SpeedStatistic.StartCounter("DecomDeserBlocks");
+                            btBlock = btBlock.DecompressGZip();                            
+                            block = btBlock.DeserializeProtobuf<Dictionary<int, byte[]>>();
+                            DBreeze.Diagnostic.SpeedStatistic.StopCounter("DecomDeserBlocks");
+                        }
+
+                        wrd.Value.wah = new WAH2(block[wrd.Value.NumberInBlock]);
+                    }
+                    //DBreeze.Diagnostic.SpeedStatistic.PrintOut("LoadBlocks", true);
+                    DBreeze.Diagnostic.SpeedStatistic.PrintOut("SelectBlocks", true);
+                    DBreeze.Diagnostic.SpeedStatistic.PrintOut("DecomDeserBlocks", true);
+
+                    foundOrigin = 0;
+
+                    foreach (var wrd in words.OrderBy(r => r.Value.foundOrigin))
+                    {
+                        //Console.WriteLine(wrd.Value.foundOrigin);
+
+                        if (foundOrigin != wrd.Value.foundOrigin)
+                        {
+                            if (oneWordFoundArrays.Count() > 0)
+                            {
+                                j++;
+                                foundArrays.Add(WAH2.MergeAllUncompressedIntoOne(oneWordFoundArrays));
+                                oneWordFoundArrays = new List<byte[]>();
+                            }
+
+                            foundOrigin = wrd.Value.foundOrigin;
+                        }
+                        else
+                        {
+
+                        }
+                        
+                        oneWordFoundArrays.Add(wrd.Value.wah.GetUncompressedByteArray());
+                    }
+
+                    //The last 
+                    if (oneWordFoundArrays.Count() > 0)
+                    {
+                        j++;
+                        foundArrays.Add(WAH2.MergeAllUncompressedIntoOne(oneWordFoundArrays));
+                        oneWordFoundArrays = new List<byte[]>();
+                    }
+                                    
+
+                    if (j >= 0)
+                    {
+                        var q = WAH2.TextSearch_OR_logic(foundArrays, req.Quantity);
+
+                        if (req.SearchLogicType == SearchRequest.eSearchLogicType.AND)
+                            q = WAH2.TextSearch_AND_logic(foundArrays).Take(req.Quantity);
+
+                        foreach (var el in q)
+                        {
+                            //Getting document
+                            docRow = dt.Select<int, byte[]>((int)el);
+                            if (docRow.Exists)
+                            {
+                                if (!dmnts.ContainsKey((int)el))
+                                {
+                                    if (req.IncludeDocuments)
+                                    {
+                                        btDoc = docRow.Value;
+
+                                        if (btDoc[0] == 0)
+                                        {
+                                            //Non compressed
+                                            doc = btDoc.Substring(1).DeserializeProtobuf<Document>();
+                                        }
+                                        else
+                                        {
+                                            doc = btDoc.Substring(1).DecompressGZip().DeserializeProtobuf<Document>();
+                                        }
+                                        dmnts.Add((int)el, doc);
+                                    }
+                                    else
+                                    {
+                                        dmnts.Add((int)el, null);
+                                    }
+                                    qOutput++;
+                                }
+                            }
+
+                            if (qOutput > req.Quantity)
+                                break;
+
+                        }
+
+                    }
+                    #endregion
+
+
+                }//eo using
+
+
+                //Repacking dmnts into resp
+                repack();
+                sw.Stop();
+
+                resp.SearchDurationMs = sw.ElapsedMilliseconds;
+            }
+            catch (Exception ex)
+            {
+                throw ThrowException("SearchDocumentSpace", ex.ToString());
+            }
+
+            return resp;
+        }
+
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="searchKeywords"></param>
+        private HashSet<string> PrepareSearchKeyWords(string searchKeywords)
+        {
+            try
+            {
+                StringBuilder sb = new StringBuilder();
+                HashSet<string> words = new HashSet<string>();
+                string word = String.Empty;
+
+                Action processWord = () =>
+                {
+                    if (sb.Length > 0)
+                    {
+                        words.Add(sb.ToString().ToLower());
+                    }
+
+                    if (sb.Length > 0)
+                        sb.Remove(0, sb.Length);
+                    //sb.Clear();
+                };
+
+                foreach (var c in searchKeywords)
+                {
+                    if (Char.IsLetterOrDigit(c) || Char.IsSymbol(c))
+                    {
+                        sb.Append(c);
+                    }
+                    else
+                    {
+                        processWord();
+                    }
+                }
+
+                //Handling last word
+                processWord();
+
+                return words;
+            }
+            catch (Exception ex)
+            {
+
+                throw ex;
+            }
+        }
+
+    }//eoc
+}
