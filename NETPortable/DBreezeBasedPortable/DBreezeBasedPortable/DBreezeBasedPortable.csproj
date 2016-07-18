@@ -45,7 +45,7 @@
       <HintPath>..\..\..\..\GpsCarControl\lib\Net45\DBreeze\Portable\DBreeze.dll</HintPath>
     </Reference>
     <Reference Include="protobuf-net">
-      <HintPath>..\..\..\packages\protobuf-net.2.1.0\lib\netstandard1.5\protobuf-net.dll</HintPath>
+      <HintPath>..\..\..\..\GpsCarControl\lib\Net45\DBreeze\Portable\protobuf-net.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup />
