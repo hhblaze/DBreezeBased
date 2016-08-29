@@ -175,6 +175,90 @@
             </summary>
             <returns></returns>
         </member>
+        <member name="M:DBreeze.DataTypes.DataTypesConvertor.ConvertBack``1(System.Byte[])">
+            <summary>
+            CONVERTING FROM byte[] to the generic type
+            </summary>
+            <typeparam name="TData"></typeparam>
+            <param name="dt"></param>
+            <returns></returns>
+        </member>
+        <member name="T:DBreeze.DataTypes.DbAscii">
+            <summary>
+            String.Empty is will return NULL
+            </summary>
+        </member>
+        <member name="P:DBreeze.DataTypes.DbAscii.Get">
+            <summary>
+            Returns string from the object
+            </summary>
+        </member>
+        <member name="T:DBreeze.DataTypes.DbCustomSerializer`1">
+            <summary>
+            <para>Custom Serializer</para>
+            <para></para>
+            <para>To support JSON.NET, make a reference to their library and then somewhere before engine init add 2 lines:</para>
+            <para>CustomSerializator.Serializator = JsonConvert.SerializeObject;</para>
+            <para>CustomSerializator.Deserializator = JsonConvert.DeserializeObject;</para>
+            <para></para>
+            <para>Possible to make like this, without class instantiating:</para>
+            <para>List&lt;string&gt; aa = new List&lt;string&gt;();</para>
+            <para>aa.Add("test1")</para>
+            <para>aa.Add("test2")</para>
+            <para>-----inside of transaction---------</para>
+            <para>tran.Insert&lt;uint, DbCustomSerializer&lt;List&lt;string&gt;&gt; &gt;("t1", i, aa);</para>
+            <para>-----------------------------------</para>
+            <para>foreach (var row in tran.SelectForward&lt;uint, DbCustomSerializer&lt;List&lt;string&gt;&gt; &gt;("t1"))</para>
+            <para>Console.WriteLine("K: {0}; V: {1}", row.Key.ToString(), (row.Value == null) ? "NULL" : row.Value.Get.Count().ToString());</para>
+            </summary>
+            <typeparam name="T"></typeparam>
+        </member>
+        <member name="P:DBreeze.DataTypes.DbCustomSerializer`1.SerializedObject">
+            <summary>
+            Returns serialized string representing the internal object
+            </summary>
+        </member>
+        <member name="P:DBreeze.DataTypes.DbCustomSerializer`1.Get">
+            <summary>
+            Gets deserialized object
+            </summary>
+        </member>
+        <member name="P:DBreeze.DataTypes.DbUnicode.Get">
+            <summary>
+            Returns string from the object
+            </summary>
+        </member>
+        <member name="P:DBreeze.DataTypes.DbUTF8.Get">
+            <summary>
+            Returns string from the object
+            </summary>
+        </member>
+        <member name="T:DBreeze.DataTypes.DbXML`1">
+            <summary>
+            <para>Microsoft XML</para>
+            <para></para>
+            <para>Possible to make like this, without class instantiating:</para>
+            <para>List&lt;string&gt; aa = new List&lt;string&gt;();</para>
+            <para>aa.Add("test1")</para>
+            <para>aa.Add("test2")</para>
+            <para>-----inside of transaction---------</para>
+            <para>tran.Insert&lt;uint, DbXML&lt;List&lt;string&gt;&gt;&gt;("t1", i, aa);</para>
+            <para>-----------------------------------</para>
+            <para>foreach (var row in tran.SelectForward&lt;uint, DbXML&lt;List&lt;string&gt;&gt;&gt;("t1"))</para>
+            <para>Console.WriteLine("K: {0}; V: {1}", row.Key.ToString(), (row.Value == null) ? "NULL" : row.Value.Get.Count().ToString());</para>
+            </summary>
+            <typeparam name="T"></typeparam>
+        </member>
+        <member name="P:DBreeze.DataTypes.DbXML`1.SerializedObject">
+            <summary>
+            Returns serialized string representing the internal object
+            </summary>
+        </member>
+        <member name="P:DBreeze.DataTypes.DbXML`1.Get">
+            <summary>
+            Gets deserialized object
+            </summary>
+        </member>
         <member name="T:DBreeze.DataTypes.Row`2">
             <summary>
             Row
@@ -243,36 +327,6 @@
         <member name="M:DBreeze.DataTypes.Row`2.PrintOut(System.String)">
             <summary>
             Experimantal Console PrintOut
-            </summary>
-        </member>
-        <member name="T:DBreeze.DataTypes.DbCustomSerializer`1">
-            <summary>
-            <para>Custom Serializer</para>
-            <para></para>
-            <para>To support JSON.NET, make a reference to their library and then somewhere before engine init add 2 lines:</para>
-            <para>CustomSerializator.Serializator = JsonConvert.SerializeObject;</para>
-            <para>CustomSerializator.Deserializator = JsonConvert.DeserializeObject;</para>
-            <para></para>
-            <para>Possible to make like this, without class instantiating:</para>
-            <para>List&lt;string&gt; aa = new List&lt;string&gt;();</para>
-            <para>aa.Add("test1")</para>
-            <para>aa.Add("test2")</para>
-            <para>-----inside of transaction---------</para>
-            <para>tran.Insert&lt;uint, DbCustomSerializer&lt;List&lt;string&gt;&gt; &gt;("t1", i, aa);</para>
-            <para>-----------------------------------</para>
-            <para>foreach (var row in tran.SelectForward&lt;uint, DbCustomSerializer&lt;List&lt;string&gt;&gt; &gt;("t1"))</para>
-            <para>Console.WriteLine("K: {0}; V: {1}", row.Key.ToString(), (row.Value == null) ? "NULL" : row.Value.Get.Count().ToString());</para>
-            </summary>
-            <typeparam name="T"></typeparam>
-        </member>
-        <member name="P:DBreeze.DataTypes.DbCustomSerializer`1.SerializedObject">
-            <summary>
-            Returns serialized string representing the internal object
-            </summary>
-        </member>
-        <member name="P:DBreeze.DataTypes.DbCustomSerializer`1.Get">
-            <summary>
-            Gets deserialized object
             </summary>
         </member>
         <member name="T:DBreeze.DataTypes.NestedTable">
@@ -1046,59 +1100,54 @@
             Identifies that table is fake, because we always want to return data even default (count - 0, select - row with .Exists= false etc...)
             </summary>
         </member>
-        <member name="T:DBreeze.DataTypes.DbAscii">
+        <member name="F:DBreeze.Diagnostic.SpeedStatistic.ToConsole">
             <summary>
-            String.Empty is will return NULL
+            Default is Debug.WriteLine, can be changed to Console.WriteLine
             </summary>
         </member>
-        <member name="P:DBreeze.DataTypes.DbAscii.Get">
+        <member name="M:DBreeze.Diagnostic.SpeedStatistic.StartCounter(System.String)">
             <summary>
-            Returns string from the object
+            Starts counter
             </summary>
+            <param name="counterName"></param>
         </member>
-        <member name="M:DBreeze.DataTypes.DataTypesConvertor.ConvertBack``1(System.Byte[])">
+        <member name="M:DBreeze.Diagnostic.SpeedStatistic.StopCounter(System.String)">
             <summary>
-            CONVERTING FROM byte[] to the generic type
+            Stops counter
             </summary>
-            <typeparam name="TData"></typeparam>
-            <param name="dt"></param>
+            <param name="counterName"></param>
+        </member>
+        <member name="M:DBreeze.Diagnostic.SpeedStatistic.GetCounter(System.String)">
+            <summary>
+            Returns Counter object.
+            Can return NULL if counter not found
+            </summary>
+            <param name="counterName"></param>
             <returns></returns>
         </member>
-        <member name="T:DBreeze.DataTypes.DbXML`1">
+        <member name="M:DBreeze.Diagnostic.SpeedStatistic.PrintOut">
             <summary>
-            <para>Microsoft XML</para>
-            <para></para>
-            <para>Possible to make like this, without class instantiating:</para>
-            <para>List&lt;string&gt; aa = new List&lt;string&gt;();</para>
-            <para>aa.Add("test1")</para>
-            <para>aa.Add("test2")</para>
-            <para>-----inside of transaction---------</para>
-            <para>tran.Insert&lt;uint, DbXML&lt;List&lt;string&gt;&gt;&gt;("t1", i, aa);</para>
-            <para>-----------------------------------</para>
-            <para>foreach (var row in tran.SelectForward&lt;uint, DbXML&lt;List&lt;string&gt;&gt;&gt;("t1"))</para>
-            <para>Console.WriteLine("K: {0}; V: {1}", row.Key.ToString(), (row.Value == null) ? "NULL" : row.Value.Get.Count().ToString());</para>
-            </summary>
-            <typeparam name="T"></typeparam>
-        </member>
-        <member name="P:DBreeze.DataTypes.DbXML`1.SerializedObject">
-            <summary>
-            Returns serialized string representing the internal object
+            Prints out stat for all counters without clearing statistic 
             </summary>
         </member>
-        <member name="P:DBreeze.DataTypes.DbXML`1.Get">
+        <member name="M:DBreeze.Diagnostic.SpeedStatistic.PrintOut(System.String)">
             <summary>
-            Gets deserialized object
+            Prints out counter without clearing statistic for this counter
             </summary>
+            <param name="counterName"></param>
         </member>
-        <member name="P:DBreeze.DataTypes.DbUnicode.Get">
+        <member name="M:DBreeze.Diagnostic.SpeedStatistic.PrintOut(System.String,System.Boolean)">
             <summary>
-            Returns string from the object
+            Prints out specified counter.
             </summary>
+            <param name="counterName"></param>
+            <param name="withClearingCounter"></param>
         </member>
-        <member name="P:DBreeze.DataTypes.DbUTF8.Get">
+        <member name="M:DBreeze.Diagnostic.SpeedStatistic.PrintOut(System.Boolean)">
             <summary>
-            Returns string from the object
+            Prints out stats for all counters
             </summary>
+            <param name="withResetingStatistic">resets statistic</param>
         </member>
         <member name="P:DBreeze.DBreezeConfiguration.Backup">
             <summary>
@@ -1171,6 +1220,93 @@
             Configuration concerning TextSearch subsystem
             </summary>
         </member>
+        <member name="F:DBreeze.DBreezeConfiguration.FSFactory">
+            <summary>
+            Must be instantiated and supplied in case of portable library
+            </summary>
+        </member>
+        <member name="T:DBreeze.DBreezeEngine">
+            <summary>
+            Main DBreeze Database class.
+            </summary>
+        </member>
+        <member name="F:DBreeze.DBreezeEngine.MainFolder">
+            <summary>
+            DBreeze version number
+            </summary>        
+        </member>
+        <member name="F:DBreeze.DBreezeEngine.DBisOperableReason">
+            <summary>
+            must be filled with a text note who brought to DBisOperable = false
+            </summary>
+        </member>
+        <member name="F:DBreeze.DBreezeEngine.RemoteEngine">
+            <summary>
+            Initialized from DBreezeRemoteEngine
+            </summary>
+        </member>
+        <member name="F:DBreeze.DBreezeEngine.Configuration">
+            <summary>
+            Dbreeze Configuration.
+            For now BackupPlan is included.
+            Later can be added special settings for each entity defined by string pattern.
+            </summary>
+        </member>
+        <member name="M:DBreeze.DBreezeEngine.#ctor">
+            <summary>
+            For DbreezeRemoteEngine wrapper
+            </summary>
+        </member>
+        <member name="M:DBreeze.DBreezeEngine.#ctor(DBreeze.DBreezeConfiguration)">
+            <summary>
+            Dbreeze instantiator
+            </summary>
+            <param name="dbreezeConfiguration"></param>
+        </member>
+        <member name="M:DBreeze.DBreezeEngine.ConstructFromConfiguration(DBreeze.DBreezeConfiguration)">
+            <summary>
+            Constructing Dbreeze from dbreezeConfiguration
+            </summary>
+            <param name="dbreezeConfiguration"></param>
+        </member>
+        <member name="M:DBreeze.DBreezeEngine.#ctor(System.String)">
+            <summary>
+            
+            </summary>
+            <param name="DBreezeDataFolderName"></param>
+        </member>
+        <member name="M:DBreeze.DBreezeEngine.InitDb">
+            <summary>
+            InitDb
+            </summary>
+        </member>
+        <member name="M:DBreeze.DBreezeEngine.Dispose">
+            <summary>
+            Dispose
+            </summary>
+        </member>
+        <member name="M:DBreeze.DBreezeEngine.GetTransaction">
+            <summary>
+            Returns transaction object.
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:DBreeze.DBreezeEngine.GetTransaction(DBreeze.eTransactionTablesLockTypes,System.String[])">
+            <summary>
+            Returns transaction object.
+            </summary>
+            <param name="tablesLockType">
+            <para>SHARED: threads can use listed tables in parallel. Must be used together with tran.SynchronizeTables command, if necessary.</para>
+            <para>EXCLUSIVE: if other threads use listed tables for reading or writing, current thread will be in a waiting queue.</para>
+            </param>
+            <param name="tables"></param>
+            <returns>Returns transaction object</returns>
+        </member>
+        <member name="P:DBreeze.DBreezeEngine.Scheme">
+            <summary>
+            Returns DBreeze schema object
+            </summary>
+        </member>
         <member name="T:DBreeze.DBreezeRemoteEngine">
             <summary>
             
@@ -1209,71 +1345,172 @@
             Returns DBreeze schema object
             </summary>
         </member>
-        <member name="M:DBreeze.LianaTrie.NestedTableStorage.RestoreTableFromTheOtherTable(System.String)">
-            <summary>
-            Works only for master tables
-            </summary>
-            <param name="newTableFullPath"></param>
+        <member name="M:DBreeze.IFileSystemFactory.CreateType1(System.String,System.Int32)">
+             <summary>
+            this._fsData = new FileStream(this._fileName, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None, _fileStreamBufferSize, FileOptions.WriteThrough);
+            this._fsRollback = new FileStream(this._fileName + ".rol", FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None, _fileStreamBufferSize, FileOptions.WriteThrough);
+            this._fsRollbackHelper = new FileStream(this._fileName + ".rhp", FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None, _fileStreamBufferSize, FileOptions.WriteThrough);
+             </summary>
+             <param name="name"></param>
+             <param name="bufferSize"></param>
+             <returns></returns>
         </member>
-        <member name="T:DBreeze.LianaTrie.NestedTablesCoordinator">
+        <member name="M:DBreeze.IFileSystemFactory.CreateType2(System.String)">
+             <summary>
+            new FileStream(tfn, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None);
+             </summary>
+             <param name="name"></param>
+             <param name="bufferSize"></param>
+             <returns></returns>
+        </member>
+        <member name="M:DBreeze.IFileSystemFactory.CreateType3(System.String)">
+             <summary>
+            new FileStream(file.FullName, FileMode.Open, FileAccess.Read, FileShare.None);
+             </summary>
+             <param name="name"></param>
+             <param name="bufferSize"></param>
+             <returns></returns>
+        </member>
+        <member name="M:DBreeze.IFileSystemFactory.Delete(System.String)">
             <summary>
-            Represents a bound to the LTrie nested tables coordinator.
-            1. Gets ability to remember Inserted Tables to perform cascade commit.
-            2. Rebind internal root-start if 2 or more horizontal tables are inserted into 1 value during one transaction (value expand case)
+            File
+            </summary>
+            <param name="path"></param>
+        </member>
+        <member name="M:DBreeze.IFileSystemFactory.Exists(System.String)">
+            <summary>
+            File
+            </summary>
+            <param name="path"></param>
+            <returns></returns>
+        </member>
+        <member name="M:DBreeze.IFileSystemFactory.Move(System.String,System.String)">
+            <summary>
+            File
+            </summary>
+            <param name="sourceFileName"></param>
+            <param name="destFileName"></param>
+        </member>
+        <member name="F:DBreeze.Scheme.AutoCloseOpenTables">
+            <summary>
+            Flag that closes file of the table if threads don't use it for reading or writing.
             </summary>
         </member>
-        <member name="F:DBreeze.LianaTrie.NestedTablesCoordinator._nestedTables">
+        <member name="M:DBreeze.Scheme.GetPhysicalPathToTheUserTable(System.String)">
             <summary>
-            Key is a pointer to the full value, then in the value new Dictionary
-            where key is root_start
+            ONLY FOR INTERNAL NEEDS, lock must be handeled by outer procedure.
+            Users must use GetTablePathFromTableName.
+            Transactions Journal after start will try to delete RollbackFiles of the finished transactions.
+            For this it needs to know exact pathes.
+            For now all tables stored in one folder. Later we will have extra config file which lets to reside 
+            some of tables in the other folders. 
+            This function is an access globalizer to physical file locations by userTableName.
+            !!!!TRAnJRNL, WHEN RESTORES ROLLBACK, MUST REFER TO Scheme trie settings in the future, FOR NOW DEFAULT
+            </summary>
+            <param name="userTableName"></param>
+            <returns></returns>
+        </member>
+        <member name="M:DBreeze.Scheme.GetTablePathFromTableName(System.String)">
+            <summary>
+            Returns physical path to the table file, if table doesn't exists in the Scheme returns String.Empty
+            </summary>
+            <param name="userTableName"></param>
+            <returns></returns>
+        </member>
+        <member name="M:DBreeze.Scheme.GetUserTableNameAsByte(System.String)">
+            <summary>
+            Adds static prefix to all user table names, to
+            make selection of tables for different purposes easier with StartsWith function
+            </summary>
+            <param name="tableName"></param>
+            <returns></returns>
+        </member>
+        <member name="M:DBreeze.Scheme.GetTable(System.String)">
+            <summary>
+            Returns table for READ, WRITE FUNC
+            </summary>
+            <param name="userTableName"></param>
+            <returns></returns>
+        </member>
+        <member name="M:DBreeze.Scheme.CheckAlternativeTableLocationsIntersections(System.String,System.String@)">
+            <summary>
+            Checks if in configuration was supplied alternative path for table location.
+            Returns true if intersection was found.
+            Alternative Path equals to String.Empty - locate in Memory
+            </summary>
+            <param name="userTableName"></param>
+            <param name="alternativePath"></param>
+            <returns></returns>
+        </member>
+        <member name="M:DBreeze.Scheme.CloseTables(System.Collections.Generic.Dictionary{System.String,System.Nullable{System.UInt64}})">
+            <summary>
+            Called by Transaction, when it's time to be Disposed and close tables.
+            Tables will be closed only in case of other threads don't use it.
+            </summary>
+            <param name="closeOpenTables"></param>
+        </member>
+        <member name="M:DBreeze.Scheme.DeleteAllReleatedTableFiles(System.String)">
+            <summary>
+            Used by GetTableFor Write, if table is newly created and we have such file name
+            </summary>
+            <param name="fullTableFilePath"></param>
+        </member>
+        <member name="M:DBreeze.Scheme.IfUserTableExists(System.String)">
+            <summary>
+            Returns if user table exists
+            </summary>
+            <param name="userTableName"></param>
+            <returns></returns>
+        </member>
+        <member name="M:DBreeze.Scheme.GetUserTableNamesStartingWith(System.String)">
+            <summary>
+            Returns List of user tables starting from specified mask.
+            If mask is String.Empty returns all user tables
+            </summary>
+            <param name="mask"></param>
+            <returns></returns>
+        </member>
+        <member name="M:DBreeze.Scheme.DeleteTable(System.String)">
+            <summary>
+            Deletes user table
+            </summary>
+            <param name="userTableName"></param>
+        </member>
+        <member name="M:DBreeze.Scheme.RenameTable(System.String,System.String)">
+            <summary>
+            Renames user table, if it existed.
+            <para>Safe, will make operation only when other threads stop to work with the oldTable</para>
+            </summary>
+            <param name="oldUserTableName"></param>
+            <param name="newUserTableName"></param>
+        </member>
+        <member name="M:DBreeze.Scheme.RenameTableInternal(System.String,System.String)">
+            <summary>
+            Renames user table, if it existed.
+            <para>If there are threads which are working with this table, rename will not be finished and will return false</para>
+            </summary>
+            <param name="oldUserTableName"></param>
+            <param name="newUserTableName"></param>
+            <returns>true if successfully renamed, otherwise false</returns>
+        </member>
+        <member name="T:DBreeze.Exceptions.DBreezeException">
+            <summary>
+            Unified class for Debreeze exceptions
             </summary>
         </member>
-        <member name="F:DBreeze.LianaTrie.NestedTablesCoordinator.ModificationThreadId">
+        <member name="M:DBreeze.Exceptions.DBreezeException.GenerateException(DBreeze.Exceptions.DBreezeException.eDBreezeExceptions,System.String,System.Exception)">
             <summary>
-            Will be taken into consideration only from MasterTrie.
-            Set up to -1 after Commit and Rollback, Set To Thread id when tran.InsertTable is called
-            using this flag we will be able to regulate returns (based on useCache or not for nested Tables)
+            Internal
             </summary>
+            <param name="exceptionType"></param>
+            <param name="message"></param>
+            <returns></returns>
         </member>
-        <member name="M:DBreeze.LianaTrie.NestedTablesCoordinator.AddNestedTable(System.Byte[]@,System.UInt64,System.Int64,DBreeze.DataTypes.NestedTableInternal)">
+        <member name="T:DBreeze.Exceptions.TableNotOperableException">
             <summary>
-            LTrie makes in case of InsertTable call
+            This is a specific Exception which will bring to DB is not opearable state, we need to analyze this type of exception separately,
+            that's why extra class.
             </summary>
-            <param name="nestedTable"></param>
-        </member>
-        <member name="M:DBreeze.LianaTrie.NestedTablesCoordinator.TransactionalCommitFinished">
-            <summary>
-            Committing nested tables
-            </summary>
-        </member>
-        <member name="M:DBreeze.LianaTrie.NestedTablesCoordinator.Commit">
-            <summary>
-            Committing nested tables
-            </summary>
-        </member>
-        <member name="M:DBreeze.LianaTrie.NestedTablesCoordinator.TransactionalCommit">
-            <summary>
-            Transactional Commit Nested
-            </summary>
-        </member>
-        <member name="M:DBreeze.LianaTrie.NestedTablesCoordinator.TransactionalRollback">
-            <summary>
-            Transactional Rollback nested
-            </summary>
-        </member>
-        <member name="M:DBreeze.LianaTrie.NestedTablesCoordinator.GetTable(System.Byte[]@,System.Int64)">
-            <summary>
-            Returns null if table is not in the coordinator, otherwise returns reference to the table
-            </summary>
-            <param name="fullValueStart"></param>
-            <param name="rootStart"></param>
-            <returns></returns>      
-        </member>
-        <member name="M:DBreeze.LianaTrie.NestedTablesCoordinator.Remove(System.Byte[]@)">
-            <summary>
-            Cascade remove all of all nested and sub-nested tables under the key
-            </summary>
-            <param name="key"></param>
         </member>
         <member name="F:DBreeze.LianaTrie.Iterations.Backward.ReturnKeyValuePair">
             <summary>
@@ -1323,91 +1560,6 @@
             <param name="inclStartKey"></param>
             <param name="inclStopKey"></param>
             <param name="useCache"></param>
-            <returns></returns>
-        </member>
-        <member name="M:DBreeze.LianaTrie.LTrieGenerationMap.GenerateMapNodesValuesUpToIndex(System.Int32,System.Boolean)">
-            <summary>
-            Used for finding out hash from Generation Map
-            </summary>
-            <param name="index"></param>
-            <param name="forceGenerateMapUpToIndex"></param>
-            <returns></returns>
-        </member>
-        <member name="F:DBreeze.LianaTrie.LTrieGenerationNode.QuantityReservationSlots">
-            <summary>
-            Reservations are calculated by Schema. They Depend upon quantity of Existing Kids.
-            QuantityAvailableReservations is calculated in ReadSelf if Kid.Pointer equals to ZeroPointer - it means reservation.
-            Default is 0
-            </summary>
-        </member>
-        <member name="F:DBreeze.LianaTrie.LTrieGenerationNode.ToChangeParentNode">
-            <summary>
-            When New Node is created it's true
-            After Reading Node it must become false,
-            After WriteSelf it will be or true or false.
-            </summary>
-        </member>
-        <member name="F:DBreeze.LianaTrie.LTrieGenerationNode.KidsBeforeModification">
-            <summary>
-            Field which contains either null (if Generation node is empty and had no kids) or value in format of prepared for Save Kids,
-            in case if ReadOutExistingNode.
-            </summary>
-        </member>
-        <member name="F:DBreeze.LianaTrie.LTrieGenerationNode.MaximumKidLineLength">
-            <summary>
-            Is calculated as LengthOfTheKidsBlockInFile(2 bytes) + (256 * (DefaultPointerLen + 1[byte definition]))
-            </summary>
-        </member>
-        <member name="M:DBreeze.LianaTrie.LTrieGenerationNode.SetupKidWithValue(System.Byte,System.Boolean,System.Byte[]@,System.Byte[]@,System.Boolean,System.Boolean@,System.Boolean)">
-            <summary>
-            
-            </summary>
-            <param name="kid"></param>
-            <param name="lastElementOfTheKey"></param>
-            <param name="fullKey"></param>
-            <param name="value"></param>
-            <param name="useExistingPointerToValue"></param>
-            <param name="WasUpdated">true means that value existed and was updated</param>
-            <param name="dontUpdateIfExists">When true - if value exists, we dont update it. If WasUpdated = true then we value exists, if false - we have inserted new one</param>
-            <returns></returns>
-        </member>
-        <member name="M:DBreeze.LianaTrie.LTrieGenerationNode.RemoveKid(System.Byte,System.Boolean,System.Byte[]@,System.Boolean@,System.Boolean,System.Byte[]@)">
-            <summary>
-            Pointer to the removing key value can be null, if such key never existed
-            </summary>
-            <param name="kid"></param>
-            <param name="lastElementOfTheKey"></param>
-            <param name="key"></param>
-            <param name="ptrToValue"></param>
-            <param name="WasRemoved">indicates that value existed if true</param>
-            <param name="retrieveDeletedValue">indicates if we must also return deleted value</param>
-            <param name="WasRemoved">deleted value as byte[] will be here</param>
-            <returns></returns>
-        </member>
-        <member name="M:DBreeze.LianaTrie.LTrieGenerationNode.TryOverWriteValuePartially(System.Byte[],System.Byte[]@,System.Byte[]@,System.UInt32,System.Int64@)">
-            <summary>
-            Returns pointer to the newly stored value
-            </summary>
-            <param name="ptr"></param>
-            <param name="value"></param>
-            <param name="fullKey"></param>
-            <param name="startIndex">from which point we should overwrite value</param>
-            <returns></returns>
-        </member>
-        <member name="M:DBreeze.LianaTrie.LTrieGenerationNode.TryOverWriteValue(System.Byte[],System.Byte[]@,System.Byte[]@)">
-            <summary>
-            Returns pointer to the newly stored value
-            </summary>
-            <param name="ptr"></param>
-            <param name="value"></param>
-            <param name="fullKey"></param>
-            <returns></returns>
-        </member>
-        <member name="M:DBreeze.LianaTrie.LTrieGenerationNode.GetQuantityOfReservationSlots">
-            <summary>
-            Calculating Quantity of Reservations slots for 0 and 1 Evolutions.
-            </summary>
-            <param name="current"></param>
             <returns></returns>
         </member>
         <member name="T:DBreeze.LianaTrie.LTrie">
@@ -1652,6 +1804,91 @@
             No need of lock.
             </summary>
         </member>
+        <member name="M:DBreeze.LianaTrie.LTrieGenerationMap.GenerateMapNodesValuesUpToIndex(System.Int32,System.Boolean)">
+            <summary>
+            Used for finding out hash from Generation Map
+            </summary>
+            <param name="index"></param>
+            <param name="forceGenerateMapUpToIndex"></param>
+            <returns></returns>
+        </member>
+        <member name="F:DBreeze.LianaTrie.LTrieGenerationNode.QuantityReservationSlots">
+            <summary>
+            Reservations are calculated by Schema. They Depend upon quantity of Existing Kids.
+            QuantityAvailableReservations is calculated in ReadSelf if Kid.Pointer equals to ZeroPointer - it means reservation.
+            Default is 0
+            </summary>
+        </member>
+        <member name="F:DBreeze.LianaTrie.LTrieGenerationNode.ToChangeParentNode">
+            <summary>
+            When New Node is created it's true
+            After Reading Node it must become false,
+            After WriteSelf it will be or true or false.
+            </summary>
+        </member>
+        <member name="F:DBreeze.LianaTrie.LTrieGenerationNode.KidsBeforeModification">
+            <summary>
+            Field which contains either null (if Generation node is empty and had no kids) or value in format of prepared for Save Kids,
+            in case if ReadOutExistingNode.
+            </summary>
+        </member>
+        <member name="F:DBreeze.LianaTrie.LTrieGenerationNode.MaximumKidLineLength">
+            <summary>
+            Is calculated as LengthOfTheKidsBlockInFile(2 bytes) + (256 * (DefaultPointerLen + 1[byte definition]))
+            </summary>
+        </member>
+        <member name="M:DBreeze.LianaTrie.LTrieGenerationNode.SetupKidWithValue(System.Byte,System.Boolean,System.Byte[]@,System.Byte[]@,System.Boolean,System.Boolean@,System.Boolean)">
+            <summary>
+            
+            </summary>
+            <param name="kid"></param>
+            <param name="lastElementOfTheKey"></param>
+            <param name="fullKey"></param>
+            <param name="value"></param>
+            <param name="useExistingPointerToValue"></param>
+            <param name="WasUpdated">true means that value existed and was updated</param>
+            <param name="dontUpdateIfExists">When true - if value exists, we dont update it. If WasUpdated = true then we value exists, if false - we have inserted new one</param>
+            <returns></returns>
+        </member>
+        <member name="M:DBreeze.LianaTrie.LTrieGenerationNode.RemoveKid(System.Byte,System.Boolean,System.Byte[]@,System.Boolean@,System.Boolean,System.Byte[]@)">
+            <summary>
+            Pointer to the removing key value can be null, if such key never existed
+            </summary>
+            <param name="kid"></param>
+            <param name="lastElementOfTheKey"></param>
+            <param name="key"></param>
+            <param name="ptrToValue"></param>
+            <param name="WasRemoved">indicates that value existed if true</param>
+            <param name="retrieveDeletedValue">indicates if we must also return deleted value</param>
+            <param name="WasRemoved">deleted value as byte[] will be here</param>
+            <returns></returns>
+        </member>
+        <member name="M:DBreeze.LianaTrie.LTrieGenerationNode.TryOverWriteValuePartially(System.Byte[],System.Byte[]@,System.Byte[]@,System.UInt32,System.Int64@)">
+            <summary>
+            Returns pointer to the newly stored value
+            </summary>
+            <param name="ptr"></param>
+            <param name="value"></param>
+            <param name="fullKey"></param>
+            <param name="startIndex">from which point we should overwrite value</param>
+            <returns></returns>
+        </member>
+        <member name="M:DBreeze.LianaTrie.LTrieGenerationNode.TryOverWriteValue(System.Byte[],System.Byte[]@,System.Byte[]@)">
+            <summary>
+            Returns pointer to the newly stored value
+            </summary>
+            <param name="ptr"></param>
+            <param name="value"></param>
+            <param name="fullKey"></param>
+            <returns></returns>
+        </member>
+        <member name="M:DBreeze.LianaTrie.LTrieGenerationNode.GetQuantityOfReservationSlots">
+            <summary>
+            Calculating Quantity of Reservations slots for 0 and 1 Evolutions.
+            </summary>
+            <param name="current"></param>
+            <returns></returns>
+        </member>
         <member name="F:DBreeze.LianaTrie.LTrieKid.Val">
             <summary>
             0-255, in case if ValueKid = false, 256 if ValueKid = true;
@@ -1793,11 +2030,6 @@
             <param name="key"></param>
             <returns></returns>
         </member>
-        <member name="F:DBreeze.LianaTrie.LTrieSetupKidResult.ValueLink">
-            <summary>
-            Link to the full value line (together with the key)
-            </summary>
-        </member>
         <member name="F:DBreeze.LianaTrie.LTrieRow.ValueStartPointer">
             <summary>
             Represents pointer to the value in physical file, remember for READ must come via sync-cache
@@ -1839,6 +2071,11 @@
             </summary>
             <param name="useCache">if true, then only committed data will be shown</param>
             <returns></returns>
+        </member>
+        <member name="F:DBreeze.LianaTrie.LTrieSetupKidResult.ValueLink">
+            <summary>
+            Link to the full value line (together with the key)
+            </summary>
         </member>
         <member name="F:DBreeze.LianaTrie.LTrieWriteCache.rootTransaction">
             <summary>
@@ -2003,6 +2240,72 @@
             <param name="valueLength">returns full value length; 0 - default</param>
             <returns></returns>
         </member>
+        <member name="T:DBreeze.LianaTrie.NestedTablesCoordinator">
+            <summary>
+            Represents a bound to the LTrie nested tables coordinator.
+            1. Gets ability to remember Inserted Tables to perform cascade commit.
+            2. Rebind internal root-start if 2 or more horizontal tables are inserted into 1 value during one transaction (value expand case)
+            </summary>
+        </member>
+        <member name="F:DBreeze.LianaTrie.NestedTablesCoordinator._nestedTables">
+            <summary>
+            Key is a pointer to the full value, then in the value new Dictionary
+            where key is root_start
+            </summary>
+        </member>
+        <member name="F:DBreeze.LianaTrie.NestedTablesCoordinator.ModificationThreadId">
+            <summary>
+            Will be taken into consideration only from MasterTrie.
+            Set up to -1 after Commit and Rollback, Set To Thread id when tran.InsertTable is called
+            using this flag we will be able to regulate returns (based on useCache or not for nested Tables)
+            </summary>
+        </member>
+        <member name="M:DBreeze.LianaTrie.NestedTablesCoordinator.AddNestedTable(System.Byte[]@,System.UInt64,System.Int64,DBreeze.DataTypes.NestedTableInternal)">
+            <summary>
+            LTrie makes in case of InsertTable call
+            </summary>
+            <param name="nestedTable"></param>
+        </member>
+        <member name="M:DBreeze.LianaTrie.NestedTablesCoordinator.TransactionalCommitFinished">
+            <summary>
+            Committing nested tables
+            </summary>
+        </member>
+        <member name="M:DBreeze.LianaTrie.NestedTablesCoordinator.Commit">
+            <summary>
+            Committing nested tables
+            </summary>
+        </member>
+        <member name="M:DBreeze.LianaTrie.NestedTablesCoordinator.TransactionalCommit">
+            <summary>
+            Transactional Commit Nested
+            </summary>
+        </member>
+        <member name="M:DBreeze.LianaTrie.NestedTablesCoordinator.TransactionalRollback">
+            <summary>
+            Transactional Rollback nested
+            </summary>
+        </member>
+        <member name="M:DBreeze.LianaTrie.NestedTablesCoordinator.GetTable(System.Byte[]@,System.Int64)">
+            <summary>
+            Returns null if table is not in the coordinator, otherwise returns reference to the table
+            </summary>
+            <param name="fullValueStart"></param>
+            <param name="rootStart"></param>
+            <returns></returns>      
+        </member>
+        <member name="M:DBreeze.LianaTrie.NestedTablesCoordinator.Remove(System.Byte[]@)">
+            <summary>
+            Cascade remove all of all nested and sub-nested tables under the key
+            </summary>
+            <param name="key"></param>
+        </member>
+        <member name="M:DBreeze.LianaTrie.NestedTableStorage.RestoreTableFromTheOtherTable(System.String)">
+            <summary>
+            Works only for master tables
+            </summary>
+            <param name="newTableFullPath"></param>
+        </member>
         <member name="T:DBreeze.SchemeInternal.CachedTableNames">
             <summary>
             serves, cache of physical file names and corresponding virtual user table names
@@ -2089,583 +2392,7 @@
             <param name="p1">pattern 1</param>
             <param name="p2">pattern 2</param>
         </member>
-        <member name="F:DBreeze.Scheme.AutoCloseOpenTables">
-            <summary>
-            Flag that closes file of the table if threads don't use it for reading or writing.
-            </summary>
-        </member>
-        <member name="M:DBreeze.Scheme.GetPhysicalPathToTheUserTable(System.String)">
-            <summary>
-            ONLY FOR INTERNAL NEEDS, lock must be handeled by outer procedure.
-            Users must use GetTablePathFromTableName.
-            Transactions Journal after start will try to delete RollbackFiles of the finished transactions.
-            For this it needs to know exact pathes.
-            For now all tables stored in one folder. Later we will have extra config file which lets to reside 
-            some of tables in the other folders. 
-            This function is an access globalizer to physical file locations by userTableName.
-            !!!!TRAnJRNL, WHEN RESTORES ROLLBACK, MUST REFER TO Scheme trie settings in the future, FOR NOW DEFAULT
-            </summary>
-            <param name="userTableName"></param>
-            <returns></returns>
-        </member>
-        <member name="M:DBreeze.Scheme.GetTablePathFromTableName(System.String)">
-            <summary>
-            Returns physical path to the table file, if table doesn't exists in the Scheme returns String.Empty
-            </summary>
-            <param name="userTableName"></param>
-            <returns></returns>
-        </member>
-        <member name="M:DBreeze.Scheme.GetUserTableNameAsByte(System.String)">
-            <summary>
-            Adds static prefix to all user table names, to
-            make selection of tables for different purposes easier with StartsWith function
-            </summary>
-            <param name="tableName"></param>
-            <returns></returns>
-        </member>
-        <member name="M:DBreeze.Scheme.GetTable(System.String)">
-            <summary>
-            Returns table for READ, WRITE FUNC
-            </summary>
-            <param name="userTableName"></param>
-            <returns></returns>
-        </member>
-        <member name="M:DBreeze.Scheme.CheckAlternativeTableLocationsIntersections(System.String,System.String@)">
-            <summary>
-            Checks if in configuration was supplied alternative path for table location.
-            Returns true if intersection was found.
-            Alternative Path equals to String.Empty - locate in Memory
-            </summary>
-            <param name="userTableName"></param>
-            <param name="alternativePath"></param>
-            <returns></returns>
-        </member>
-        <member name="M:DBreeze.Scheme.CloseTables(System.Collections.Generic.Dictionary{System.String,System.Nullable{System.UInt64}})">
-            <summary>
-            Called by Transaction, when it's time to be Disposed and close tables.
-            Tables will be closed only in case of other threads don't use it.
-            </summary>
-            <param name="closeOpenTables"></param>
-        </member>
-        <member name="M:DBreeze.Scheme.DeleteAllReleatedTableFiles(System.String)">
-            <summary>
-            Used by GetTableFor Write, if table is newly created and we have such file name
-            </summary>
-            <param name="fullTableFilePath"></param>
-        </member>
-        <member name="M:DBreeze.Scheme.IfUserTableExists(System.String)">
-            <summary>
-            Returns if user table exists
-            </summary>
-            <param name="userTableName"></param>
-            <returns></returns>
-        </member>
-        <member name="M:DBreeze.Scheme.GetUserTableNamesStartingWith(System.String)">
-            <summary>
-            Returns List of user tables starting from specified mask.
-            If mask is String.Empty returns all user tables
-            </summary>
-            <param name="mask"></param>
-            <returns></returns>
-        </member>
-        <member name="M:DBreeze.Scheme.DeleteTable(System.String)">
-            <summary>
-            Deletes user table
-            </summary>
-            <param name="userTableName"></param>
-        </member>
-        <member name="M:DBreeze.Scheme.RenameTable(System.String,System.String)">
-            <summary>
-            Renames user table, if it existed.
-            <para>Safe, will make operation only when other threads stop to work with the oldTable</para>
-            </summary>
-            <param name="oldUserTableName"></param>
-            <param name="newUserTableName"></param>
-        </member>
-        <member name="M:DBreeze.Scheme.RenameTableInternal(System.String,System.String)">
-            <summary>
-            Renames user table, if it existed.
-            <para>If there are threads which are working with this table, rename will not be finished and will return false</para>
-            </summary>
-            <param name="oldUserTableName"></param>
-            <param name="newUserTableName"></param>
-            <returns>true if successfully renamed, otherwise false</returns>
-        </member>
-        <member name="T:DBreeze.Exceptions.DBreezeException">
-            <summary>
-            Unified class for Debreeze exceptions
-            </summary>
-        </member>
-        <member name="M:DBreeze.Exceptions.DBreezeException.GenerateException(DBreeze.Exceptions.DBreezeException.eDBreezeExceptions,System.String,System.Exception)">
-            <summary>
-            Internal
-            </summary>
-            <param name="exceptionType"></param>
-            <param name="message"></param>
-            <returns></returns>
-        </member>
-        <member name="T:DBreeze.Exceptions.TableNotOperableException">
-            <summary>
-            This is a specific Exception which will bring to DB is not opearable state, we need to analyze this type of exception separately,
-            that's why extra class.
-            </summary>
-        </member>
-        <member name="F:DBreeze.Diagnostic.SpeedStatistic.ToConsole">
-            <summary>
-            Default is Debug.WriteLine, can be changed to Console.WriteLine
-            </summary>
-        </member>
-        <member name="M:DBreeze.Diagnostic.SpeedStatistic.StartCounter(System.String)">
-            <summary>
-            Starts counter
-            </summary>
-            <param name="counterName"></param>
-        </member>
-        <member name="M:DBreeze.Diagnostic.SpeedStatistic.StopCounter(System.String)">
-            <summary>
-            Stops counter
-            </summary>
-            <param name="counterName"></param>
-        </member>
-        <member name="M:DBreeze.Diagnostic.SpeedStatistic.GetCounter(System.String)">
-            <summary>
-            Returns Counter object.
-            Can return NULL if counter not found
-            </summary>
-            <param name="counterName"></param>
-            <returns></returns>
-        </member>
-        <member name="M:DBreeze.Diagnostic.SpeedStatistic.PrintOut">
-            <summary>
-            Prints out stat for all counters without clearing statistic 
-            </summary>
-        </member>
-        <member name="M:DBreeze.Diagnostic.SpeedStatistic.PrintOut(System.String)">
-            <summary>
-            Prints out counter without clearing statistic for this counter
-            </summary>
-            <param name="counterName"></param>
-        </member>
-        <member name="M:DBreeze.Diagnostic.SpeedStatistic.PrintOut(System.String,System.Boolean)">
-            <summary>
-            Prints out specified counter.
-            </summary>
-            <param name="counterName"></param>
-            <param name="withClearingCounter"></param>
-        </member>
-        <member name="M:DBreeze.Diagnostic.SpeedStatistic.PrintOut(System.Boolean)">
-            <summary>
-            Prints out stats for all counters
-            </summary>
-            <param name="withResetingStatistic">resets statistic</param>
-        </member>
-        <member name="M:DBreeze.Storage.RemoteInstance.RemoteInstanceCommander.OpenRemoteTable(System.String)">
-            <summary>
-            Always first command, which send table name and receives back RemoteTableId
-            Opens remote table (data, rollback and rollback helper files), if it doesn't exists, then creates it.
-            All other operations are based on this RemoteTableId.
-            </summary>
-            <param name="fileName"></param>
-        </member>
-        <member name="M:DBreeze.Storage.RemoteInstance.RemoteInstanceCommander.CloseRemoteTable">
-            <summary>
-            CloseRemoteTable, returns nothing
-            </summary>
-        </member>
-        <member name="M:DBreeze.Storage.RemoteInstance.RemoteInstanceCommander.DeleteRemoteTable">
-            <summary>
-            DeleteRemoteTable
-            </summary>
-        </member>
-        <member name="M:DBreeze.Storage.RemoteInstance.RemoteInstanceCommander.DataFileWrite(System.Byte[],System.Int32,System.Int32,System.Boolean)">
-            <summary>
-            Writes to remote data file, return sets DataFileLength
-            </summary>
-            <param name="array"></param>
-            <param name="offset"></param>
-            <param name="count"></param>
-            <param name="withFlush"></param>
-        </member>
-        <member name="M:DBreeze.Storage.RemoteInstance.RemoteInstanceCommander.RollbackFileWrite(System.Byte[],System.Int32,System.Int32,System.Boolean)">
-            <summary>
-            Writes to remote rollback file, return sets RollbackFileLength
-            </summary>
-            <param name="array"></param>
-            <param name="offset"></param>
-            <param name="count"></param>
-            <param name="withFlush"></param>
-        </member>
-        <member name="M:DBreeze.Storage.RemoteInstance.RemoteInstanceCommander.RollbackHelperFileWrite(System.Byte[],System.Int32,System.Int32,System.Boolean)">
-            <summary>
-            Writes to remote rollback helper file, return sets RollbackFileHelperLength
-            </summary>
-            <param name="array"></param>
-            <param name="offset"></param>
-            <param name="count"></param>
-            <param name="withFlush"></param>
-        </member>
-        <member name="M:DBreeze.Storage.RemoteInstance.RemoteInstanceCommander.DataFileRead(System.Byte[],System.Int32,System.Int32)">
-            <summary>
-            Reads Datafile
-            </summary>
-            <param name="array"></param>
-            <param name="offset"></param>
-            <param name="count"></param>
-            <returns></returns>
-        </member>
-        <member name="M:DBreeze.Storage.RemoteInstance.RemoteInstanceCommander.RollbackFileRead(System.Byte[],System.Int32,System.Int32)">
-            <summary>
-            RollbackFileRead
-            </summary>
-            <param name="array"></param>
-            <param name="offset"></param>
-            <param name="count"></param>
-            <returns></returns>
-        </member>
-        <member name="M:DBreeze.Storage.RemoteInstance.RemoteInstanceCommander.RollbackHelperFileRead(System.Byte[],System.Int32,System.Int32)">
-            <summary>
-            RollbackHelperFileRead
-            </summary>
-            <param name="array"></param>
-            <param name="offset"></param>
-            <param name="count"></param>
-            <returns></returns>
-        </member>
-        <member name="M:DBreeze.Storage.RemoteInstance.RemoteInstanceCommander.DataFileFlush">
-            <summary>
-            Data file Flush
-            </summary>
-        </member>
-        <member name="M:DBreeze.Storage.RemoteInstance.RemoteInstanceCommander.RollbackFileFlush">
-            <summary>
-            Rollback file flush
-            </summary>
-        </member>
-        <member name="M:DBreeze.Storage.RemoteInstance.RemoteInstanceCommander.RollbackFileRecreate">
-            <summary>
-            RollbackFileRecreate
-            </summary>
-        </member>
-        <member name="T:DBreeze.Storage.RemoteInstance.RemoteTable">
-            <summary>
-            Represents one table, is managed by RemoteTablesHandler, server data, rollback and rollback helper files.
-            </summary>
-        </member>
-        <member name="M:DBreeze.Storage.RemoteInstance.RemoteTable.#ctor(System.String,System.UInt64)">
-            <summary>
-            
-            </summary>
-            <param name="_fileName"></param>
-            <param name="tableId"></param>
-        </member>
-        <member name="M:DBreeze.Storage.RemoteInstance.RemoteTable.OpenRemoteTable">
-            <summary>
-            OpenRemoteTable
-            </summary>
-            <returns></returns>
-        </member>
-        <member name="M:DBreeze.Storage.RemoteInstance.RemoteTable.Dispose">
-            <summary>
-            Dispose
-            </summary>
-        </member>
-        <member name="M:DBreeze.Storage.RemoteInstance.RemoteTable.CloseRemoteTable">
-            <summary>
-            CloseRemoteTable
-            </summary>
-        </member>
-        <member name="M:DBreeze.Storage.RemoteInstance.RemoteTable.DeleteRemoteTable">
-            <summary>
-            DeleteRemoteTable
-            </summary>
-            <returns></returns>
-        </member>
-        <member name="M:DBreeze.Storage.RemoteInstance.RemoteTable.DataFileWrite(System.Int64,System.Boolean,System.Byte[])">
-            <summary>
-            DataFileWrite
-            </summary>
-            <param name="position"></param>
-            <param name="withFlush"></param>
-            <param name="data"></param>
-            <returns></returns>
-        </member>
-        <member name="M:DBreeze.Storage.RemoteInstance.RemoteTable.RollbackFileWrite(System.Int64,System.Boolean,System.Byte[])">
-            <summary>
-            RollbackFileWrite
-            </summary>
-            <param name="position"></param>
-            <param name="withFlush"></param>
-            <param name="data"></param>
-            <returns></returns>
-        </member>
-        <member name="M:DBreeze.Storage.RemoteInstance.RemoteTable.RollbackHelperFileWrite(System.Int64,System.Boolean,System.Byte[])">
-            <summary>
-            RollbackFileWrite
-            </summary>
-            <param name="position"></param>
-            <param name="withFlush"></param>
-            <param name="data"></param>
-            <returns></returns>
-        </member>
-        <member name="M:DBreeze.Storage.RemoteInstance.RemoteTable.DataFileRead(System.Int64,System.Int32)">
-            <summary>
-            DataFileRead
-            </summary>
-            <param name="position"></param>
-            <returns></returns>
-        </member>
-        <member name="M:DBreeze.Storage.RemoteInstance.RemoteTable.RollbackFileRead(System.Int64,System.Int32)">
-            <summary>
-            RollbackFileRead
-            </summary>
-            <param name="position"></param>
-            <returns></returns>
-        </member>
-        <member name="M:DBreeze.Storage.RemoteInstance.RemoteTable.RollbackHelperFileRead(System.Int64,System.Int32)">
-            <summary>
-            RollbackHelperFileRead
-            </summary>
-            <param name="position"></param>
-            <returns></returns>
-        </member>
-        <member name="M:DBreeze.Storage.RemoteInstance.RemoteTable.DataFileFlush">
-            <summary>
-            DataFileFlush
-            </summary>
-            <returns></returns>
-        </member>
-        <member name="M:DBreeze.Storage.RemoteInstance.RemoteTable.RollbackFileFlush">
-            <summary>
-            RollbackFileFlush
-            </summary>
-            <returns></returns>
-        </member>
-        <member name="M:DBreeze.Storage.RemoteInstance.RemoteTable.RollbackFileRecreate">
-            <summary>
-            RollbackFileRecreate
-            </summary>
-            <returns></returns>
-        </member>
-        <member name="T:DBreeze.Storage.RemoteInstance.RemoteTablesHandler">
-            <summary>
-            ServerSide. Servs one local database.
-            </summary>
-        </member>
-        <member name="F:DBreeze.Storage.RemoteInstance.RemoteTablesHandler._tIds">
-            <summary>
-            fileName to id binding
-            </summary>
-        </member>
-        <member name="M:DBreeze.Storage.RemoteInstance.RemoteTablesHandler.#ctor(System.String)">
-            <summary>
-            RemoteTablesHandler
-            </summary>
-            <param name="databasePreFolderPath"></param>
-        </member>
-        <member name="M:DBreeze.Storage.RemoteInstance.RemoteTablesHandler.Dispose">
-            <summary>
-            Dispose
-            </summary>
-        </member>
-        <member name="M:DBreeze.Storage.RemoteInstance.RemoteTablesHandler.ParseProtocol(System.Byte[])">
-            <summary>
-            ParseProtocol
-            </summary>
-            <param name="protocol"></param>
-            <returns></returns>
-        </member>
-        <member name="T:DBreeze.Storage.RISR">
-            <summary>
-            DBreeze Remote Instance SR implementation
-            Specially designed for DBreeze specific storage format.
-            Not for common usage.
-            </summary>
-        </member>
-        <member name="F:DBreeze.Storage.RISR.IsOperable">
-            <summary>
-            Indicates subsystem vitality
-            </summary>
-        </member>
-        <member name="F:DBreeze.Storage.RISR._randBuf">
-            <summary>
-            Random buffer
-            </summary>
-        </member>
-        <member name="T:DBreeze.Storage.RISR.r">
-            <summary>
-            Record in rollback is characterized with 
-            </summary>
-        </member>
-        <member name="P:DBreeze.Storage.RISR.r.o">
-            <summary>
-            offset in rollback file
-            </summary>
-        </member>
-        <member name="P:DBreeze.Storage.RISR.r.l">
-            <summary>
-            Length in rollback file
-            </summary>
-        </member>
-        <member name="F:DBreeze.Storage.RISR._rollbackCache">
-            <summary>
-            Rollback cache
-            Key is offset in data file, value is corresponding offset and length in rollback file
-            </summary>
-        </member>
-        <member name="F:DBreeze.Storage.RISR.maxRandomBufferSize">
-            <summary>
-            Random buffer maximal size before flush
-            </summary>
-        </member>
-        <member name="F:DBreeze.Storage.RISR.MaxRollbackFileSize">
-            <summary>
-            Rollback file re-creation after initialization
-            </summary>
-        </member>
-        <member name="F:DBreeze.Storage.RISR.eofData">
-            <summary>
-            Pointer to the end of file, before current commit
-            </summary>
-        </member>
-        <member name="F:DBreeze.Storage.RISR._storageFixTime">
-            <summary>
-            DateTime when file was initialized. Is remembered by LTrieRow, based on this file.
-            If file is change after RestoreTableFromTheOtherTable or RecreateFiles,
-            LTrieRow will have different version and will return exception.
-            </summary>
-        </member>
-        <member name="P:DBreeze.Storage.RISR.Length">
-            <summary>
-            Physical length of the storage file
-            </summary>
-        </member>
-        <member name="P:DBreeze.Storage.RISR.StorageFixTime">
-            <summary>
-            Returns time of file initiation, ead remarks on 
-            </summary>
-        </member>
-        <member name="P:DBreeze.Storage.RISR.TrieSettings">
-            <summary>
-            
-            </summary>
-        </member>
-        <member name="P:DBreeze.Storage.RISR.DbreezeConfiguration">
-            <summary>
-            
-            </summary>
-        </member>
-        <member name="P:DBreeze.Storage.RISR.Table_FileName">
-            <summary>
-            
-            </summary>
-        </member>
-        <member name="M:DBreeze.Storage.RISR.Table_Dispose">
-            <summary>
-            
-            </summary>
-        </member>
-        <member name="M:DBreeze.Storage.RISR.RestoreInitRollback">
-            <summary>
-            
-            </summary>
-        </member>
-        <member name="M:DBreeze.Storage.RISR.ParseRollBackFile(System.Byte[])">
-            <summary>
-            
-            </summary>
-            <param name="rbd"></param>
-        </member>
-        <member name="M:DBreeze.Storage.RISR.RestoreTableFromTheOtherTable(System.String)">
-            <summary>
-            
-            </summary>
-            <param name="newTableFullPath"></param>
-        </member>
-        <member name="M:DBreeze.Storage.RISR.RecreateFiles">
-            <summary>
-            
-            </summary>
-        </member>
-        <member name="M:DBreeze.Storage.RISR.FlushSequentialBuffer">
-            <summary>
-            Must be called from lock_fs
-            </summary>
-        </member>
-        <member name="M:DBreeze.Storage.RISR.Table_WriteToTheEnd(System.Byte[])">
-            <summary>
-            
-            </summary>
-            <param name="data"></param>
-            <returns></returns>
-        </member>
-        <member name="M:DBreeze.Storage.RISR.Table_WriteByOffset(System.Byte[],System.Byte[])">
-            <summary>
-            
-            </summary>
-            <param name="offset"></param>
-            <param name="data"></param>
-        </member>
-        <member name="M:DBreeze.Storage.RISR.Table_WriteByOffset(System.Int64,System.Byte[])">
-            <summary>
-            
-            </summary>
-            <param name="offset"></param>
-            <param name="data"></param>
-        </member>
-        <member name="M:DBreeze.Storage.RISR.FlushRandomBuffer">
-            <summary>
-            Is called only from lock_fs and must be finished by calling NET_Flush
-            </summary>     
-        </member>
-        <member name="M:DBreeze.Storage.RISR.Table_Read(System.Boolean,System.Byte[],System.Int32)">
-            <summary>
-            
-            </summary>
-            <param name="useCache"></param>
-            <param name="offset"></param>
-            <param name="count"></param>
-            <returns></returns>
-        </member>
-        <member name="M:DBreeze.Storage.RISR.Table_Read(System.Boolean,System.Int64,System.Int32)">
-            <summary>
-            
-            </summary>
-            <param name="useCache"></param>
-            <param name="offset"></param>
-            <param name="count"></param>
-            <returns></returns>
-        </member>
-        <member name="M:DBreeze.Storage.RISR.Commit">
-            <summary>
-            Cleans all buffers and flushes data to the disk
-            </summary>
-        </member>
-        <member name="F:DBreeze.Storage.RISR.TransactionalCommitIsStarted">
-            <summary>
-            Transactional Commit is started
-            </summary>
-        </member>
-        <member name="M:DBreeze.Storage.RISR.TransactionalCommit">
-            <summary>
-            
-            </summary>
-        </member>
-        <member name="M:DBreeze.Storage.RISR.TransactionalCommitIsFinished">
-            <summary>
-            
-            </summary>
-        </member>
-        <member name="M:DBreeze.Storage.RISR.TransactionalRollback">
-            <summary>
-            
-            </summary>
-        </member>
-        <member name="M:DBreeze.Storage.RISR.Rollback">
-            <summary>
-            Standard and transactional rollback
-            </summary>
-        </member>
-        <member name="M:DBreeze.Storage.Backup.#ctor(System.String)">
+        <member name="M:DBreeze.Storage.Backup.#ctor(System.String,DBreeze.DBreezeConfiguration)">
             <summary>
             
             </summary>
@@ -2738,163 +2465,15 @@
             Holder of filenames and file handlers
             </summary>
         </member>
+        <member name="M:DBreeze.Storage.BackupRestorer.#ctor(DBreeze.DBreezeConfiguration)">
+            <summary>
+            FSFactory
+            </summary>
+            <param name="configuration">configuration.FSFactory must be instantiated for portable</param>
+        </member>
         <member name="M:DBreeze.Storage.BackupRestorer.StartRestoration">
             <summary>
             Starts backup restore routine
-            </summary>
-        </member>
-        <member name="T:DBreeze.Storage.MSR">
-            <summary>
-            DBreeze random and sequential disk IO buffers implementation.
-            Specially designed for DBreeze specific storage format.
-            Not for common usage.
-            </summary>
-        </member>
-        <member name="F:DBreeze.Storage.MSR.IsOperable">
-            <summary>
-            Indicates subsystem vitality
-            </summary>
-        </member>
-        <member name="F:DBreeze.Storage.MSR._randBuf">
-            <summary>
-            Random buffer
-            </summary>
-        </member>
-        <member name="T:DBreeze.Storage.MSR.r">
-            <summary>
-            Record in rollback is characterized with 
-            </summary>
-        </member>
-        <member name="P:DBreeze.Storage.MSR.r.o">
-            <summary>
-            offset in rollback file
-            </summary>
-        </member>
-        <member name="P:DBreeze.Storage.MSR.r.l">
-            <summary>
-            Length in rollback file
-            </summary>
-        </member>
-        <member name="F:DBreeze.Storage.MSR._rollbackCache">
-            <summary>
-            Rollback cache
-            Key is offset in data file, value is corresponding offset and length in rollback file
-            </summary>
-        </member>
-        <member name="F:DBreeze.Storage.MSR.maxRandomBufferSize">
-            <summary>
-            Random buffer maximal size before flush
-            </summary>
-        </member>
-        <member name="F:DBreeze.Storage.MSR.MaxRollbackFileSize">
-            <summary>
-            Rollback file re-creation after initialization
-            </summary>
-        </member>
-        <member name="F:DBreeze.Storage.MSR.eofData">
-            <summary>
-            Pointer to the end of file
-            </summary>
-        </member>
-        <member name="F:DBreeze.Storage.MSR._storageFixTime">
-            <summary>
-            DateTime when file was initialized. Is remembered by LTrieRow, based on this file.
-            If file is change after RestoreTableFromTheOtherTable or RecreateFiles,
-            LTrieRow will have different version and will return exception.
-            </summary>
-        </member>
-        <member name="P:DBreeze.Storage.MSR.Length">
-            <summary>
-            Physical length of the storage file
-            </summary>
-        </member>
-        <member name="P:DBreeze.Storage.MSR.StorageFixTime">
-            <summary>
-            Returns time of file initiation, ead remarks on 
-            </summary>
-        </member>
-        <member name="M:DBreeze.Storage.MSR.Table_Dispose">
-            <summary>
-            
-            </summary>
-        </member>
-        <member name="M:DBreeze.Storage.MSR.RecreateFiles">
-            <summary>
-            
-            </summary>
-        </member>
-        <member name="M:DBreeze.Storage.MSR.Table_WriteToTheEnd(System.Byte[])">
-            <summary>
-            
-            </summary>
-            <param name="data"></param>
-            <returns></returns>
-        </member>
-        <member name="M:DBreeze.Storage.MSR.Table_WriteByOffset(System.Byte[],System.Byte[])">
-            <summary>
-            
-            </summary>
-            <param name="offset"></param>
-            <param name="data"></param>
-        </member>
-        <member name="M:DBreeze.Storage.MSR.Table_WriteByOffset(System.Int64,System.Byte[])">
-            <summary>
-            
-            </summary>
-            <param name="offset"></param>
-            <param name="data"></param>
-        </member>
-        <member name="M:DBreeze.Storage.MSR.FlushRandomBuffer">
-            <summary>
-            Is called only from lock_fs and must be finished by calling NET_Flush
-            </summary>
-            <param name="commit"></param>
-        </member>
-        <member name="M:DBreeze.Storage.MSR.Table_Read(System.Boolean,System.Byte[],System.Int32)">
-            <summary>
-            
-            </summary>
-            <param name="useCache">if actual overwritten data must be used</param>
-            <param name="offset"></param>
-            <param name="count"></param>
-            <returns></returns>
-        </member>
-        <member name="M:DBreeze.Storage.MSR.Table_Read(System.Boolean,System.Int64,System.Int32)">
-            <summary>
-            
-            </summary>
-            <param name="readActual">if actual overwritten data must be used</param>
-            <param name="offset"></param>
-            <returns></returns>
-        </member>
-        <member name="M:DBreeze.Storage.MSR.Commit">
-            <summary>
-            Cleans all buffers and flushes data to the disk
-            </summary>
-        </member>
-        <member name="F:DBreeze.Storage.MSR.TransactionalCommitIsStarted">
-            <summary>
-            Transactional Commit is started
-            </summary>
-        </member>
-        <member name="M:DBreeze.Storage.MSR.TransactionalCommit">
-            <summary>
-            
-            </summary>
-        </member>
-        <member name="M:DBreeze.Storage.MSR.TransactionalCommitIsFinished">
-            <summary>
-            
-            </summary>
-        </member>
-        <member name="M:DBreeze.Storage.MSR.TransactionalRollback">
-            <summary>
-            
-            </summary>
-        </member>
-        <member name="M:DBreeze.Storage.MSR.Rollback">
-            <summary>
-            Standard and transactional rollback
             </summary>
         </member>
         <member name="T:DBreeze.Storage.FSR">
@@ -3213,6 +2792,676 @@
             
             </summary>
             <param name="datas"></param>
+        </member>
+        <member name="T:DBreeze.Storage.MSR">
+            <summary>
+            DBreeze random and sequential disk IO buffers implementation.
+            Specially designed for DBreeze specific storage format.
+            Not for common usage.
+            </summary>
+        </member>
+        <member name="F:DBreeze.Storage.MSR.IsOperable">
+            <summary>
+            Indicates subsystem vitality
+            </summary>
+        </member>
+        <member name="F:DBreeze.Storage.MSR._randBuf">
+            <summary>
+            Random buffer
+            </summary>
+        </member>
+        <member name="T:DBreeze.Storage.MSR.r">
+            <summary>
+            Record in rollback is characterized with 
+            </summary>
+        </member>
+        <member name="P:DBreeze.Storage.MSR.r.o">
+            <summary>
+            offset in rollback file
+            </summary>
+        </member>
+        <member name="P:DBreeze.Storage.MSR.r.l">
+            <summary>
+            Length in rollback file
+            </summary>
+        </member>
+        <member name="F:DBreeze.Storage.MSR._rollbackCache">
+            <summary>
+            Rollback cache
+            Key is offset in data file, value is corresponding offset and length in rollback file
+            </summary>
+        </member>
+        <member name="F:DBreeze.Storage.MSR.maxRandomBufferSize">
+            <summary>
+            Random buffer maximal size before flush
+            </summary>
+        </member>
+        <member name="F:DBreeze.Storage.MSR.MaxRollbackFileSize">
+            <summary>
+            Rollback file re-creation after initialization
+            </summary>
+        </member>
+        <member name="F:DBreeze.Storage.MSR.eofData">
+            <summary>
+            Pointer to the end of file
+            </summary>
+        </member>
+        <member name="F:DBreeze.Storage.MSR._storageFixTime">
+            <summary>
+            DateTime when file was initialized. Is remembered by LTrieRow, based on this file.
+            If file is change after RestoreTableFromTheOtherTable or RecreateFiles,
+            LTrieRow will have different version and will return exception.
+            </summary>
+        </member>
+        <member name="P:DBreeze.Storage.MSR.Length">
+            <summary>
+            Physical length of the storage file
+            </summary>
+        </member>
+        <member name="P:DBreeze.Storage.MSR.StorageFixTime">
+            <summary>
+            Returns time of file initiation, ead remarks on 
+            </summary>
+        </member>
+        <member name="M:DBreeze.Storage.MSR.Table_Dispose">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="M:DBreeze.Storage.MSR.RecreateFiles">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="M:DBreeze.Storage.MSR.Table_WriteToTheEnd(System.Byte[])">
+            <summary>
+            
+            </summary>
+            <param name="data"></param>
+            <returns></returns>
+        </member>
+        <member name="M:DBreeze.Storage.MSR.Table_WriteByOffset(System.Byte[],System.Byte[])">
+            <summary>
+            
+            </summary>
+            <param name="offset"></param>
+            <param name="data"></param>
+        </member>
+        <member name="M:DBreeze.Storage.MSR.Table_WriteByOffset(System.Int64,System.Byte[])">
+            <summary>
+            
+            </summary>
+            <param name="offset"></param>
+            <param name="data"></param>
+        </member>
+        <member name="M:DBreeze.Storage.MSR.FlushRandomBuffer">
+            <summary>
+            Is called only from lock_fs and must be finished by calling NET_Flush
+            </summary>
+            <param name="commit"></param>
+        </member>
+        <member name="M:DBreeze.Storage.MSR.Table_Read(System.Boolean,System.Byte[],System.Int32)">
+            <summary>
+            
+            </summary>
+            <param name="useCache">if actual overwritten data must be used</param>
+            <param name="offset"></param>
+            <param name="count"></param>
+            <returns></returns>
+        </member>
+        <member name="M:DBreeze.Storage.MSR.Table_Read(System.Boolean,System.Int64,System.Int32)">
+            <summary>
+            
+            </summary>
+            <param name="readActual">if actual overwritten data must be used</param>
+            <param name="offset"></param>
+            <returns></returns>
+        </member>
+        <member name="M:DBreeze.Storage.MSR.Commit">
+            <summary>
+            Cleans all buffers and flushes data to the disk
+            </summary>
+        </member>
+        <member name="F:DBreeze.Storage.MSR.TransactionalCommitIsStarted">
+            <summary>
+            Transactional Commit is started
+            </summary>
+        </member>
+        <member name="M:DBreeze.Storage.MSR.TransactionalCommit">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="M:DBreeze.Storage.MSR.TransactionalCommitIsFinished">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="M:DBreeze.Storage.MSR.TransactionalRollback">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="M:DBreeze.Storage.MSR.Rollback">
+            <summary>
+            Standard and transactional rollback
+            </summary>
+        </member>
+        <member name="T:DBreeze.Storage.RemoteInstance.IRemoteInstanceCommander">
+            <summary>
+            NSR works via this interface
+            </summary>
+        </member>
+        <member name="M:DBreeze.Storage.RemoteInstance.IRemoteInstanceCommander.OpenRemoteTable(System.String)">
+            <summary>
+            Opens remote file (data, rollback and rollback helper), if it doesn't exists, then creates it.
+            In background returns current rollback, rollback helper, data file length and RemoteTableId.
+            All other operations are done using remote table id
+            </summary>
+            <param name="fileName"></param>        
+        </member>
+        <member name="M:DBreeze.Storage.RemoteInstance.IRemoteInstanceCommander.CloseRemoteTable">
+            <summary>
+            Closes remote table (data, rollback and rollback helper)
+            </summary>        
+        </member>
+        <member name="M:DBreeze.Storage.RemoteInstance.IRemoteInstanceCommander.DeleteRemoteTable">
+            <summary>
+            Deletes remote table (data, rollback and rollback helper).
+            </summary>
+            <param name="fileName"></param>        
+        </member>
+        <member name="P:DBreeze.Storage.RemoteInstance.IRemoteInstanceCommander.DataFileLength">
+            <summary>
+            Operations like OpenRemoteFile, Read etc always return back the length of data and rollback file, which must be set to this variable by interface implementer
+            </summary>
+        </member>
+        <member name="P:DBreeze.Storage.RemoteInstance.IRemoteInstanceCommander.DataFilePosition">
+            <summary>
+            Sets up data file position for reading or writing
+            </summary>
+        </member>
+        <member name="P:DBreeze.Storage.RemoteInstance.IRemoteInstanceCommander.RollbackFilePosition">
+            <summary>
+            Sets up rollback file position for reading or writing
+            </summary>
+        </member>
+        <member name="P:DBreeze.Storage.RemoteInstance.IRemoteInstanceCommander.RollbackHelperFilePosition">
+            <summary>
+            Sets up rollback file position for reading or writing
+            </summary>
+        </member>
+        <member name="M:DBreeze.Storage.RemoteInstance.IRemoteInstanceCommander.DataFileWrite(System.Byte[],System.Int32,System.Int32,System.Boolean)">
+            <summary>
+            Writes to remote data file, return sets DataFileLength
+            </summary>
+            <param name="array"></param>
+            <param name="offset"></param>
+            <param name="count"></param>
+        </member>
+        <member name="M:DBreeze.Storage.RemoteInstance.IRemoteInstanceCommander.RollbackFileWrite(System.Byte[],System.Int32,System.Int32,System.Boolean)">
+            <summary>
+            Writes to remote rollback file, return sets RollbackFileLength
+            </summary>
+            <param name="array"></param>
+            <param name="offset"></param>
+            <param name="count"></param>
+        </member>
+        <member name="M:DBreeze.Storage.RemoteInstance.IRemoteInstanceCommander.RollbackHelperFileWrite(System.Byte[],System.Int32,System.Int32,System.Boolean)">
+            <summary>
+            Writes to remote rollback file, return sets RollbackHelperFileLength
+            </summary>
+            <param name="array"></param>
+            <param name="offset"></param>
+            <param name="count"></param>
+        </member>
+        <member name="M:DBreeze.Storage.RemoteInstance.IRemoteInstanceCommander.DataFileRead(System.Byte[],System.Int32,System.Int32)">
+            <summary>
+            DataFileRead
+            </summary>
+            <param name="array"></param>
+            <param name="offset"></param>
+            <param name="count"></param>
+            <returns></returns>
+        </member>
+        <member name="M:DBreeze.Storage.RemoteInstance.IRemoteInstanceCommander.RollbackFileRead(System.Byte[],System.Int32,System.Int32)">
+            <summary>
+            RollbackFileRead
+            </summary>
+            <param name="array"></param>
+            <param name="offset"></param>
+            <param name="count"></param>
+            <returns></returns>
+        </member>
+        <member name="M:DBreeze.Storage.RemoteInstance.IRemoteInstanceCommander.RollbackHelperFileRead(System.Byte[],System.Int32,System.Int32)">
+            <summary>
+            RollbackHelperFileRead
+            </summary>
+            <param name="array"></param>
+            <param name="offset"></param>
+            <param name="count"></param>
+            <returns></returns>
+        </member>
+        <member name="M:DBreeze.Storage.RemoteInstance.IRemoteInstanceCommander.RollbackFileRecreate">
+            <summary>
+            RollbackFileRecreate
+            </summary>
+        </member>
+        <member name="M:DBreeze.Storage.RemoteInstance.IRemoteInstanceCommander.DataFileFlush">
+            <summary>
+            DataFileFlush
+            </summary>
+        </member>
+        <member name="M:DBreeze.Storage.RemoteInstance.IRemoteInstanceCommander.RollbackFileFlush">
+            <summary>
+            RollbackFileFlush
+            </summary>
+        </member>
+        <member name="M:DBreeze.Storage.RemoteInstance.RemoteInstanceCommander.OpenRemoteTable(System.String)">
+            <summary>
+            Always first command, which send table name and receives back RemoteTableId
+            Opens remote table (data, rollback and rollback helper files), if it doesn't exists, then creates it.
+            All other operations are based on this RemoteTableId.
+            </summary>
+            <param name="fileName"></param>
+        </member>
+        <member name="M:DBreeze.Storage.RemoteInstance.RemoteInstanceCommander.CloseRemoteTable">
+            <summary>
+            CloseRemoteTable, returns nothing
+            </summary>
+        </member>
+        <member name="M:DBreeze.Storage.RemoteInstance.RemoteInstanceCommander.DeleteRemoteTable">
+            <summary>
+            DeleteRemoteTable
+            </summary>
+        </member>
+        <member name="M:DBreeze.Storage.RemoteInstance.RemoteInstanceCommander.DataFileWrite(System.Byte[],System.Int32,System.Int32,System.Boolean)">
+            <summary>
+            Writes to remote data file, return sets DataFileLength
+            </summary>
+            <param name="array"></param>
+            <param name="offset"></param>
+            <param name="count"></param>
+            <param name="withFlush"></param>
+        </member>
+        <member name="M:DBreeze.Storage.RemoteInstance.RemoteInstanceCommander.RollbackFileWrite(System.Byte[],System.Int32,System.Int32,System.Boolean)">
+            <summary>
+            Writes to remote rollback file, return sets RollbackFileLength
+            </summary>
+            <param name="array"></param>
+            <param name="offset"></param>
+            <param name="count"></param>
+            <param name="withFlush"></param>
+        </member>
+        <member name="M:DBreeze.Storage.RemoteInstance.RemoteInstanceCommander.RollbackHelperFileWrite(System.Byte[],System.Int32,System.Int32,System.Boolean)">
+            <summary>
+            Writes to remote rollback helper file, return sets RollbackFileHelperLength
+            </summary>
+            <param name="array"></param>
+            <param name="offset"></param>
+            <param name="count"></param>
+            <param name="withFlush"></param>
+        </member>
+        <member name="M:DBreeze.Storage.RemoteInstance.RemoteInstanceCommander.DataFileRead(System.Byte[],System.Int32,System.Int32)">
+            <summary>
+            Reads Datafile
+            </summary>
+            <param name="array"></param>
+            <param name="offset"></param>
+            <param name="count"></param>
+            <returns></returns>
+        </member>
+        <member name="M:DBreeze.Storage.RemoteInstance.RemoteInstanceCommander.RollbackFileRead(System.Byte[],System.Int32,System.Int32)">
+            <summary>
+            RollbackFileRead
+            </summary>
+            <param name="array"></param>
+            <param name="offset"></param>
+            <param name="count"></param>
+            <returns></returns>
+        </member>
+        <member name="M:DBreeze.Storage.RemoteInstance.RemoteInstanceCommander.RollbackHelperFileRead(System.Byte[],System.Int32,System.Int32)">
+            <summary>
+            RollbackHelperFileRead
+            </summary>
+            <param name="array"></param>
+            <param name="offset"></param>
+            <param name="count"></param>
+            <returns></returns>
+        </member>
+        <member name="M:DBreeze.Storage.RemoteInstance.RemoteInstanceCommander.DataFileFlush">
+            <summary>
+            Data file Flush
+            </summary>
+        </member>
+        <member name="M:DBreeze.Storage.RemoteInstance.RemoteInstanceCommander.RollbackFileFlush">
+            <summary>
+            Rollback file flush
+            </summary>
+        </member>
+        <member name="M:DBreeze.Storage.RemoteInstance.RemoteInstanceCommander.RollbackFileRecreate">
+            <summary>
+            RollbackFileRecreate
+            </summary>
+        </member>
+        <member name="T:DBreeze.Storage.RemoteInstance.RemoteTable">
+            <summary>
+            Represents one table, is managed by RemoteTablesHandler, server data, rollback and rollback helper files.
+            </summary>
+        </member>
+        <member name="M:DBreeze.Storage.RemoteInstance.RemoteTable.#ctor(DBreeze.Storage.RemoteInstance.RemoteTablesHandler,System.String,System.UInt64)">
+            <summary>
+            
+            </summary>
+            <param name="_fileName"></param>
+            <param name="tableId"></param>
+        </member>
+        <member name="M:DBreeze.Storage.RemoteInstance.RemoteTable.OpenRemoteTable">
+            <summary>
+            OpenRemoteTable
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:DBreeze.Storage.RemoteInstance.RemoteTable.Dispose">
+            <summary>
+            Dispose
+            </summary>
+        </member>
+        <member name="M:DBreeze.Storage.RemoteInstance.RemoteTable.CloseRemoteTable">
+            <summary>
+            CloseRemoteTable
+            </summary>
+        </member>
+        <member name="M:DBreeze.Storage.RemoteInstance.RemoteTable.DeleteRemoteTable">
+            <summary>
+            DeleteRemoteTable
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:DBreeze.Storage.RemoteInstance.RemoteTable.DataFileWrite(System.Int64,System.Boolean,System.Byte[])">
+            <summary>
+            DataFileWrite
+            </summary>
+            <param name="position"></param>
+            <param name="withFlush"></param>
+            <param name="data"></param>
+            <returns></returns>
+        </member>
+        <member name="M:DBreeze.Storage.RemoteInstance.RemoteTable.RollbackFileWrite(System.Int64,System.Boolean,System.Byte[])">
+            <summary>
+            RollbackFileWrite
+            </summary>
+            <param name="position"></param>
+            <param name="withFlush"></param>
+            <param name="data"></param>
+            <returns></returns>
+        </member>
+        <member name="M:DBreeze.Storage.RemoteInstance.RemoteTable.RollbackHelperFileWrite(System.Int64,System.Boolean,System.Byte[])">
+            <summary>
+            RollbackFileWrite
+            </summary>
+            <param name="position"></param>
+            <param name="withFlush"></param>
+            <param name="data"></param>
+            <returns></returns>
+        </member>
+        <member name="M:DBreeze.Storage.RemoteInstance.RemoteTable.DataFileRead(System.Int64,System.Int32)">
+            <summary>
+            DataFileRead
+            </summary>
+            <param name="position"></param>
+            <returns></returns>
+        </member>
+        <member name="M:DBreeze.Storage.RemoteInstance.RemoteTable.RollbackFileRead(System.Int64,System.Int32)">
+            <summary>
+            RollbackFileRead
+            </summary>
+            <param name="position"></param>
+            <returns></returns>
+        </member>
+        <member name="M:DBreeze.Storage.RemoteInstance.RemoteTable.RollbackHelperFileRead(System.Int64,System.Int32)">
+            <summary>
+            RollbackHelperFileRead
+            </summary>
+            <param name="position"></param>
+            <returns></returns>
+        </member>
+        <member name="M:DBreeze.Storage.RemoteInstance.RemoteTable.DataFileFlush">
+            <summary>
+            DataFileFlush
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:DBreeze.Storage.RemoteInstance.RemoteTable.RollbackFileFlush">
+            <summary>
+            RollbackFileFlush
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:DBreeze.Storage.RemoteInstance.RemoteTable.RollbackFileRecreate">
+            <summary>
+            RollbackFileRecreate
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="T:DBreeze.Storage.RemoteInstance.RemoteTablesHandler">
+            <summary>
+            ServerSide. Servs one local database.
+            </summary>
+        </member>
+        <member name="F:DBreeze.Storage.RemoteInstance.RemoteTablesHandler._tIds">
+            <summary>
+            fileName to id binding
+            </summary>
+        </member>
+        <member name="M:DBreeze.Storage.RemoteInstance.RemoteTablesHandler.#ctor(DBreeze.DBreezeConfiguration)">
+            <summary>
+            RemoteTablesHandler
+            </summary>
+            <param name="configuration">configuration.DBreezeDataFolderName must be filled and for portable IFileSystemFactory instantiated</param>
+        </member>
+        <member name="M:DBreeze.Storage.RemoteInstance.RemoteTablesHandler.Dispose">
+            <summary>
+            Dispose
+            </summary>
+        </member>
+        <member name="M:DBreeze.Storage.RemoteInstance.RemoteTablesHandler.ParseProtocol(System.Byte[])">
+            <summary>
+            ParseProtocol
+            </summary>
+            <param name="protocol"></param>
+            <returns></returns>
+        </member>
+        <member name="T:DBreeze.Storage.RISR">
+            <summary>
+            DBreeze Remote Instance SR implementation
+            Specially designed for DBreeze specific storage format.
+            Not for common usage.
+            </summary>
+        </member>
+        <member name="F:DBreeze.Storage.RISR.IsOperable">
+            <summary>
+            Indicates subsystem vitality
+            </summary>
+        </member>
+        <member name="F:DBreeze.Storage.RISR._randBuf">
+            <summary>
+            Random buffer
+            </summary>
+        </member>
+        <member name="T:DBreeze.Storage.RISR.r">
+            <summary>
+            Record in rollback is characterized with 
+            </summary>
+        </member>
+        <member name="P:DBreeze.Storage.RISR.r.o">
+            <summary>
+            offset in rollback file
+            </summary>
+        </member>
+        <member name="P:DBreeze.Storage.RISR.r.l">
+            <summary>
+            Length in rollback file
+            </summary>
+        </member>
+        <member name="F:DBreeze.Storage.RISR._rollbackCache">
+            <summary>
+            Rollback cache
+            Key is offset in data file, value is corresponding offset and length in rollback file
+            </summary>
+        </member>
+        <member name="F:DBreeze.Storage.RISR.maxRandomBufferSize">
+            <summary>
+            Random buffer maximal size before flush
+            </summary>
+        </member>
+        <member name="F:DBreeze.Storage.RISR.MaxRollbackFileSize">
+            <summary>
+            Rollback file re-creation after initialization
+            </summary>
+        </member>
+        <member name="F:DBreeze.Storage.RISR.eofData">
+            <summary>
+            Pointer to the end of file, before current commit
+            </summary>
+        </member>
+        <member name="F:DBreeze.Storage.RISR._storageFixTime">
+            <summary>
+            DateTime when file was initialized. Is remembered by LTrieRow, based on this file.
+            If file is change after RestoreTableFromTheOtherTable or RecreateFiles,
+            LTrieRow will have different version and will return exception.
+            </summary>
+        </member>
+        <member name="P:DBreeze.Storage.RISR.Length">
+            <summary>
+            Physical length of the storage file
+            </summary>
+        </member>
+        <member name="P:DBreeze.Storage.RISR.StorageFixTime">
+            <summary>
+            Returns time of file initiation, ead remarks on 
+            </summary>
+        </member>
+        <member name="P:DBreeze.Storage.RISR.TrieSettings">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="P:DBreeze.Storage.RISR.DbreezeConfiguration">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="P:DBreeze.Storage.RISR.Table_FileName">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="M:DBreeze.Storage.RISR.Table_Dispose">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="M:DBreeze.Storage.RISR.RestoreInitRollback">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="M:DBreeze.Storage.RISR.ParseRollBackFile(System.Byte[])">
+            <summary>
+            
+            </summary>
+            <param name="rbd"></param>
+        </member>
+        <member name="M:DBreeze.Storage.RISR.RestoreTableFromTheOtherTable(System.String)">
+            <summary>
+            
+            </summary>
+            <param name="newTableFullPath"></param>
+        </member>
+        <member name="M:DBreeze.Storage.RISR.RecreateFiles">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="M:DBreeze.Storage.RISR.FlushSequentialBuffer">
+            <summary>
+            Must be called from lock_fs
+            </summary>
+        </member>
+        <member name="M:DBreeze.Storage.RISR.Table_WriteToTheEnd(System.Byte[])">
+            <summary>
+            
+            </summary>
+            <param name="data"></param>
+            <returns></returns>
+        </member>
+        <member name="M:DBreeze.Storage.RISR.Table_WriteByOffset(System.Byte[],System.Byte[])">
+            <summary>
+            
+            </summary>
+            <param name="offset"></param>
+            <param name="data"></param>
+        </member>
+        <member name="M:DBreeze.Storage.RISR.Table_WriteByOffset(System.Int64,System.Byte[])">
+            <summary>
+            
+            </summary>
+            <param name="offset"></param>
+            <param name="data"></param>
+        </member>
+        <member name="M:DBreeze.Storage.RISR.FlushRandomBuffer">
+            <summary>
+            Is called only from lock_fs and must be finished by calling NET_Flush
+            </summary>     
+        </member>
+        <member name="M:DBreeze.Storage.RISR.Table_Read(System.Boolean,System.Byte[],System.Int32)">
+            <summary>
+            
+            </summary>
+            <param name="useCache"></param>
+            <param name="offset"></param>
+            <param name="count"></param>
+            <returns></returns>
+        </member>
+        <member name="M:DBreeze.Storage.RISR.Table_Read(System.Boolean,System.Int64,System.Int32)">
+            <summary>
+            
+            </summary>
+            <param name="useCache"></param>
+            <param name="offset"></param>
+            <param name="count"></param>
+            <returns></returns>
+        </member>
+        <member name="M:DBreeze.Storage.RISR.Commit">
+            <summary>
+            Cleans all buffers and flushes data to the disk
+            </summary>
+        </member>
+        <member name="F:DBreeze.Storage.RISR.TransactionalCommitIsStarted">
+            <summary>
+            Transactional Commit is started
+            </summary>
+        </member>
+        <member name="M:DBreeze.Storage.RISR.TransactionalCommit">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="M:DBreeze.Storage.RISR.TransactionalCommitIsFinished">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="M:DBreeze.Storage.RISR.TransactionalRollback">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="M:DBreeze.Storage.RISR.Rollback">
+            <summary>
+            Standard and transactional rollback
+            </summary>
         </member>
         <member name="F:DBreeze.Storage.TrieSettings.POINTER_LENGTH">
             <summary>
@@ -3580,111 +3829,6 @@
             <param name="indexesToCheck"></param>
             <param name="maximalReturnQuantity"></param>
             <returns></returns>
-        </member>
-        <member name="M:DBreeze.TransactionTablesLocker.AddSession(DBreeze.eTransactionTablesLockTypes,System.String[])">
-            <summary>
-            
-            </summary>
-            <param name="lockType"></param>
-            <param name="tables"></param>
-            <returns>false if thread grants access, false if thread is in a queue</returns>
-        </member>
-        <member name="M:DBreeze.TransactionTablesLocker.RemoveSession">
-            <summary>
-            
-            </summary>
-        </member>
-        <member name="M:DBreeze.TransactionTablesLocker.Dispose">
-            <summary>
-            MUST BE CALLED BY ENGINE DISPOSE (After all other DBreeze disposes)
-            </summary>
-        </member>
-        <member name="T:DBreeze.Tries.ITrieRootNode">
-            <summary>
-            Identifies any type of RootNode in different tries
-            </summary>
-        </member>
-        <member name="T:DBreeze.DBreezeEngine">
-            <summary>
-            Main DBreeze Database class.
-            </summary>
-        </member>
-        <member name="F:DBreeze.DBreezeEngine.MainFolder">
-            <summary>
-            DBreeze version number
-            </summary>        
-        </member>
-        <member name="F:DBreeze.DBreezeEngine.DBisOperableReason">
-            <summary>
-            must be filled with a text note who brought to DBisOperable = false
-            </summary>
-        </member>
-        <member name="F:DBreeze.DBreezeEngine.RemoteEngine">
-            <summary>
-            Initialized from DBreezeRemoteEngine
-            </summary>
-        </member>
-        <member name="F:DBreeze.DBreezeEngine.Configuration">
-            <summary>
-            Dbreeze Configuration.
-            For now BackupPlan is included.
-            Later can be added special settings for each entity defined by string pattern.
-            </summary>
-        </member>
-        <member name="M:DBreeze.DBreezeEngine.#ctor">
-            <summary>
-            For DbreezeRemoteEngine wrapper
-            </summary>
-        </member>
-        <member name="M:DBreeze.DBreezeEngine.#ctor(DBreeze.DBreezeConfiguration)">
-            <summary>
-            Dbreeze instantiator
-            </summary>
-            <param name="dbreezeConfiguration"></param>
-        </member>
-        <member name="M:DBreeze.DBreezeEngine.ConstructFromConfiguration(DBreeze.DBreezeConfiguration)">
-            <summary>
-            Constructing Dbreeze from dbreezeConfiguration
-            </summary>
-            <param name="dbreezeConfiguration"></param>
-        </member>
-        <member name="M:DBreeze.DBreezeEngine.#ctor(System.String)">
-            <summary>
-            
-            </summary>
-            <param name="DBreezeDataFolderName"></param>
-        </member>
-        <member name="M:DBreeze.DBreezeEngine.InitDb">
-            <summary>
-            InitDb
-            </summary>
-        </member>
-        <member name="M:DBreeze.DBreezeEngine.Dispose">
-            <summary>
-            Dispose
-            </summary>
-        </member>
-        <member name="M:DBreeze.DBreezeEngine.GetTransaction">
-            <summary>
-            Returns transaction object.
-            </summary>
-            <returns></returns>
-        </member>
-        <member name="M:DBreeze.DBreezeEngine.GetTransaction(DBreeze.eTransactionTablesLockTypes,System.String[])">
-            <summary>
-            Returns transaction object.
-            </summary>
-            <param name="tablesLockType">
-            <para>SHARED: threads can use listed tables in parallel. Must be used together with tran.SynchronizeTables command, if necessary.</para>
-            <para>EXCLUSIVE: if other threads use listed tables for reading or writing, current thread will be in a waiting queue.</para>
-            </param>
-            <param name="tables"></param>
-            <returns>Returns transaction object</returns>
-        </member>
-        <member name="P:DBreeze.DBreezeEngine.Scheme">
-            <summary>
-            Returns DBreeze schema object
-            </summary>
         </member>
         <member name="M:DBreeze.Transactions.ITransactable.ITRCommitFinished">
             <summary>
@@ -4873,6 +5017,29 @@
             
             </summary>
         </member>
+        <member name="M:DBreeze.TransactionTablesLocker.AddSession(DBreeze.eTransactionTablesLockTypes,System.String[])">
+            <summary>
+            
+            </summary>
+            <param name="lockType"></param>
+            <param name="tables"></param>
+            <returns>false if thread grants access, false if thread is in a queue</returns>
+        </member>
+        <member name="M:DBreeze.TransactionTablesLocker.RemoveSession">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="M:DBreeze.TransactionTablesLocker.Dispose">
+            <summary>
+            MUST BE CALLED BY ENGINE DISPOSE (After all other DBreeze disposes)
+            </summary>
+        </member>
+        <member name="T:DBreeze.Tries.ITrieRootNode">
+            <summary>
+            Identifies any type of RootNode in different tries
+            </summary>
+        </member>
         <member name="M:DBreeze.Utils.Async.AsyncOperations.DoAsync``1(System.Action{``0},``0,System.Action)">
             <summary>
             Executes async, then calls Callback function
@@ -4881,6 +5048,95 @@
             <param name="f"></param>
             <param name="arg"></param>
             <param name="callback"></param>
+        </member>
+        <member name="T:DBreeze.Utils.Biser">
+            <summary>
+            Custom binary serializer of well known types
+            </summary>
+        </member>
+        <member name="M:DBreeze.Utils.Biser.Encode_DICT_PROTO_STRING_BYTEARRAYHASHSET(System.Collections.Generic.IDictionary{System.String,System.Collections.Generic.List{System.Byte[]}},DBreeze.Utils.Compression.eCompressionMethod)">
+            <summary>
+            Proto encoding of Dictionary [string, List[byte[]]].
+            Hashset can be null, after decoding istantiated, zero-length hashset will be returned in this case.
+            </summary>
+            <param name="d"></param>
+            <param name="compression"></param>
+            <returns></returns>
+        </member>
+        <member name="M:DBreeze.Utils.Biser.Decode_DICT_PROTO_STRING_BYTEARRAYHASHSET(System.Byte[],System.Collections.Generic.IDictionary{System.String,System.Collections.Generic.List{System.Byte[]}},DBreeze.Utils.Compression.eCompressionMethod)">
+            <summary>
+            Decodes byte[] into  Dictionary [string, List[byte[]]]
+            </summary>
+            <param name="encB"></param>
+            <param name="retD"></param>
+            <param name="compression"></param>
+            <returns></returns>
+        </member>
+        <member name="M:DBreeze.Utils.Biser.Encode_DICT_PROTO_STRING_UINTHASHSET(System.Collections.Generic.IDictionary{System.String,System.Collections.Generic.HashSet{System.UInt32}},DBreeze.Utils.Compression.eCompressionMethod)">
+            <summary>
+            Proto encoding of Dictionary [string, HashSet[uint]].
+            Hashset can be null, after decoding istantiated, zero-length hashset will be returned in this case.
+            </summary>
+            <param name="d"></param>
+            <param name="compression"></param>
+            <returns></returns>
+        </member>
+        <member name="M:DBreeze.Utils.Biser.Decode_DICT_PROTO_STRING_UINTHASHSET(System.Byte[],System.Collections.Generic.IDictionary{System.String,System.Collections.Generic.HashSet{System.UInt32}},DBreeze.Utils.Compression.eCompressionMethod)">
+            <summary>
+            Decodes byte[] into  Dictionary [string, HashSet[uint]]
+            </summary>
+            <param name="encB"></param>
+            <param name="retD"></param>
+            <param name="compression"></param>
+            <returns></returns>
+        </member>
+        <member name="M:DBreeze.Utils.Biser.Encode_DICT_PROTO_UINT_BYTEARRAY(System.Collections.Generic.IDictionary{System.UInt32,System.Byte[]},DBreeze.Utils.Compression.eCompressionMethod)">
+            <summary>
+            Proto encoding of Dictionary [uint, byte[]].
+            Use when key is less then 4 bytes (less then 268mln).
+            Value byte[0] will be presented as null after decoding
+            </summary>
+            <param name="d"></param>
+            <param name="compression">compression method extra applied to the outgoing byte array</param>
+            <returns></returns>
+        </member>
+        <member name="M:DBreeze.Utils.Biser.Decode_DICT_PROTO_UINT_BYTEARRAY(System.Byte[],System.Collections.Generic.IDictionary{System.UInt32,System.Byte[]},DBreeze.Utils.Compression.eCompressionMethod)">
+            <summary>
+            Used when parameter is encoded with Encode_DICT_PROTO_UINT_BYTEARRAY.
+            Returns Dictionary [uint, byte[]]
+            </summary>
+            <param name="encB"></param>
+            <param name="retD">Instantiated Dictionary must be supplied and will be returned filled</param>        
+            <param name="compression">compression method supplied by Encode_DICT_PROTO_UINT_BYTEARRAY</param>
+        </member>
+        <member name="M:DBreeze.Utils.Biser.GetVarintBytes(System.UInt32)">
+            <summary>
+            Uses protobuf concepts
+            </summary>
+            <param name="value"></param>
+            <returns></returns>
+        </member>
+        <member name="M:DBreeze.Utils.Biser.GetVarintBytes(System.UInt64)">
+            <summary>
+            Uses protobuf concepts
+            </summary>
+            <param name="value"></param>
+            <returns></returns>
+        </member>
+        <member name="M:DBreeze.Utils.Biser.ToUInt32(System.Byte[])">
+            <summary>
+            Uses protobuf concepts
+            </summary>
+            <param name="bytes"></param>
+            <returns></returns>
+        </member>
+        <member name="M:DBreeze.Utils.Biser.ToTarget(System.Byte[],System.Int32)">
+            <summary>
+            ToTarget
+            </summary>
+            <param name="bytes"></param>
+            <param name="sizeBites"></param>
+            <returns></returns>
         </member>
         <member name="T:DBreeze.Utils.BloomFilter.Filter`1.HashFunction">
             <summary>
@@ -5770,7 +6026,7 @@
         </member>
         <member name="M:DBreeze.Utils.BytesProcessing.ToBytesString(System.Byte[])">
             <summary>
-            To pure HEX string without delimiters, or use ToHexFromByteArray
+            To pure HEX string without delimiters
             </summary>
             <param name="dBytes"></param>
             <returns></returns>
@@ -5917,95 +6173,6 @@
             <param name="arrayToCompare"></param>
             <returns></returns>
         </member>
-        <member name="T:DBreeze.Utils.Biser">
-            <summary>
-            Custom binary serializer of well known types
-            </summary>
-        </member>
-        <member name="M:DBreeze.Utils.Biser.Encode_DICT_PROTO_STRING_BYTEARRAYHASHSET(System.Collections.Generic.IDictionary{System.String,System.Collections.Generic.List{System.Byte[]}},DBreeze.Utils.Compression.eCompressionMethod)">
-            <summary>
-            Proto encoding of Dictionary [string, List[byte[]]].
-            Hashset can be null, after decoding istantiated, zero-length hashset will be returned in this case.
-            </summary>
-            <param name="d"></param>
-            <param name="compression"></param>
-            <returns></returns>
-        </member>
-        <member name="M:DBreeze.Utils.Biser.Decode_DICT_PROTO_STRING_BYTEARRAYHASHSET(System.Byte[],System.Collections.Generic.IDictionary{System.String,System.Collections.Generic.List{System.Byte[]}},DBreeze.Utils.Compression.eCompressionMethod)">
-            <summary>
-            Decodes byte[] into  Dictionary [string, List[byte[]]]
-            </summary>
-            <param name="encB"></param>
-            <param name="retD"></param>
-            <param name="compression"></param>
-            <returns></returns>
-        </member>
-        <member name="M:DBreeze.Utils.Biser.Encode_DICT_PROTO_STRING_UINTHASHSET(System.Collections.Generic.IDictionary{System.String,System.Collections.Generic.HashSet{System.UInt32}},DBreeze.Utils.Compression.eCompressionMethod)">
-            <summary>
-            Proto encoding of Dictionary [string, HashSet[uint]].
-            Hashset can be null, after decoding istantiated, zero-length hashset will be returned in this case.
-            </summary>
-            <param name="d"></param>
-            <param name="compression"></param>
-            <returns></returns>
-        </member>
-        <member name="M:DBreeze.Utils.Biser.Decode_DICT_PROTO_STRING_UINTHASHSET(System.Byte[],System.Collections.Generic.IDictionary{System.String,System.Collections.Generic.HashSet{System.UInt32}},DBreeze.Utils.Compression.eCompressionMethod)">
-            <summary>
-            Decodes byte[] into  Dictionary [string, HashSet[uint]]
-            </summary>
-            <param name="encB"></param>
-            <param name="retD"></param>
-            <param name="compression"></param>
-            <returns></returns>
-        </member>
-        <member name="M:DBreeze.Utils.Biser.Encode_DICT_PROTO_UINT_BYTEARRAY(System.Collections.Generic.IDictionary{System.UInt32,System.Byte[]},DBreeze.Utils.Compression.eCompressionMethod)">
-            <summary>
-            Proto encoding of Dictionary [uint, byte[]].
-            Use when key is less then 4 bytes (less then 268mln).
-            Value byte[0] will be presented as null after decoding
-            </summary>
-            <param name="d"></param>
-            <param name="compression">compression method extra applied to the outgoing byte array</param>
-            <returns></returns>
-        </member>
-        <member name="M:DBreeze.Utils.Biser.Decode_DICT_PROTO_UINT_BYTEARRAY(System.Byte[],System.Collections.Generic.IDictionary{System.UInt32,System.Byte[]},DBreeze.Utils.Compression.eCompressionMethod)">
-            <summary>
-            Used when parameter is encoded with Encode_DICT_PROTO_UINT_BYTEARRAY.
-            Returns Dictionary [uint, byte[]]
-            </summary>
-            <param name="encB"></param>
-            <param name="retD">Instantiated Dictionary must be supplied and will be returned filled</param>        
-            <param name="compression">compression method supplied by Encode_DICT_PROTO_UINT_BYTEARRAY</param>
-        </member>
-        <member name="M:DBreeze.Utils.Biser.GetVarintBytes(System.UInt32)">
-            <summary>
-            Uses protobuf concepts
-            </summary>
-            <param name="value"></param>
-            <returns></returns>
-        </member>
-        <member name="M:DBreeze.Utils.Biser.GetVarintBytes(System.UInt64)">
-            <summary>
-            Uses protobuf concepts
-            </summary>
-            <param name="value"></param>
-            <returns></returns>
-        </member>
-        <member name="M:DBreeze.Utils.Biser.ToUInt32(System.Byte[])">
-            <summary>
-            Uses protobuf concepts
-            </summary>
-            <param name="bytes"></param>
-            <returns></returns>
-        </member>
-        <member name="M:DBreeze.Utils.Biser.ToTarget(System.Byte[],System.Int32)">
-            <summary>
-            ToTarget
-            </summary>
-            <param name="bytes"></param>
-            <param name="sizeBites"></param>
-            <returns></returns>
-        </member>
         <member name="M:DBreeze.Utils.Compression.GZip_Compress(System.Byte[])">
             <summary>
             In Memory Compression with Gzip
@@ -6061,6 +6228,11 @@
             In case if better algorithm will be found
             </summary>
         </member>
+        <member name="T:DBreeze.Utils.DbReaderWriterSpinLock">
+            <summary>
+            Temporar wrapper
+            </summary>
+        </member>
         <member name="M:DBreeze.Utils.DbThreadsGator.#ctor">
             <summary>
             Creates open Gate
@@ -6077,14 +6249,6 @@
             If gate is closed then it will be closed timeout time in milliseconds
             </summary>
             <param name="milliseconds"></param>
-            <returns></returns>
-        </member>
-        <member name="M:DBreeze.Utils.DbThreadsGator.PutGateHere(System.Int32,System.Boolean)">
-            <summary>
-            If gate is closed then it will be closed timeout time in milliseconds
-            </summary>
-            <param name="milliseconds"></param>
-            <param name="milliseconds">exitContext</param>
             <returns></returns>
         </member>
         <member name="M:DBreeze.Utils.Hash.MurMurHash.MixedMurMurHash3_128(System.Byte[])">
