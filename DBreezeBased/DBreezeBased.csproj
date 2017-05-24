@@ -40,9 +40,9 @@
     <AssemblyOriginatorKeyFile>signature.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="DBreeze, Version=1.76.2016.829, Culture=neutral, PublicKeyToken=174b57f1c155f3c6, processorArchitecture=MSIL">
+    <Reference Include="DBreeze, Version=1.77.2016.829, Culture=neutral, PublicKeyToken=174b57f1c155f3c6, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\GpsCarControl\lib\Net45\DBreeze\DBreeze.dll</HintPath>
+      <HintPath>..\..\DBreeze\Deployment\bin\NET45\DBreeze.dll</HintPath>
     </Reference>
     <Reference Include="protobuf-net, Version=2.0.0.668, Culture=neutral, PublicKeyToken=257b51d87d2e4d67, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
