@@ -1,0 +1,648 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>DBreezeBased</name>
+    </assembly>
+    <members>
+        <member name="T:DBreezeBased.Compression.GzipCompressor">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="M:DBreezeBased.Compression.GzipCompressor.CompressGZip(System.Byte[])">
+            <summary>
+            In Memory Compression with Gzip
+            </summary>
+            <param name="data"></param>
+            <returns></returns>
+        </member>
+        <member name="M:DBreezeBased.Compression.GzipCompressor.DecompressGZip(System.Byte[])">
+            <summary>
+            In Memory GZip Decompressor 
+            </summary>
+            <param name="data"></param>
+            <returns></returns>
+        </member>
+        <member name="T:DBreezeBased.DocumentsStorage.Document">
+            <summary>
+            DBreezeBased.DocumentsStorage.Document
+            </summary>
+        </member>
+        <member name="P:DBreezeBased.DocumentsStorage.Document.DocumentSpace">
+            <summary>
+            Logical grouping of documents (correctly would be "document groups") to distinguish search space.
+            Must field while inserting and searching of documents.
+            </summary>
+        </member>
+        <member name="P:DBreezeBased.DocumentsStorage.Document.DocumentName">
+            <summary>
+            External name to visualize document (must NOT be unique)
+            </summary>
+        </member>
+        <member name="P:DBreezeBased.DocumentsStorage.Document.Content">
+            <summary>
+            Content of the document (can converted into byte[] anything, which will be returned back by request)
+            </summary>
+        </member>
+        <member name="P:DBreezeBased.DocumentsStorage.Document.ExternalId">
+            <summary>
+            External document group ID.  Group is a set of all versions of one document.
+            Such id can represet document for outer system number scope.        
+            </summary>
+        </member>
+        <member name="P:DBreezeBased.DocumentsStorage.Document.InternalId">
+            <summary>
+            Document group id. Group is a set of all versions of one document.
+            </summary>
+        </member>
+        <member name="P:DBreezeBased.DocumentsStorage.Document.Searchables">
+            <summary>
+            Text (separated words/digits/symbols). 
+            They will be used for the future search the docuemnt among document space. 
+            </summary>
+        </member>
+        <member name="P:DBreezeBased.DocumentsStorage.Document.DocumentSpaceId">
+            <summary>
+            After inserting document receives also DocumentSpaceId
+            </summary>
+        </member>
+        <member name="P:DBreezeBased.DocumentsStorage.Document.DocumentSequentialId">
+            <summary>
+            Monotonically grown internal id. Every inserted or updated docuemnt receives new DocumentSequentialId.
+            </summary>
+        </member>
+        <member name="P:DBreezeBased.DocumentsStorage.Document.InternalStructure">
+            <summary>
+            For internal usage. First 16 bytes link to searchables
+            </summary>
+        </member>
+        <member name="P:DBreezeBased.DocumentsStorage.Document.Description">
+            <summary>
+            Can be supplied extra document description
+            </summary>
+        </member>
+        <member name="T:DBreezeBased.DocumentsStorage.SearchRequest">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="F:DBreezeBased.DocumentsStorage.SearchRequest.eSearchLogicType.AND">
+            <summary>
+            Strong. Only complete occurance is accepted
+            </summary>
+        </member>
+        <member name="F:DBreezeBased.DocumentsStorage.SearchRequest.eSearchLogicType.OR">
+            <summary>
+            Week logic, 1 and more occurances are accepted, sorted by relevancy of occurances
+            </summary>
+        </member>
+        <member name="P:DBreezeBased.DocumentsStorage.SearchRequest.DocumentSpace">
+            <summary>
+            DoucumentSpaceName which must be searched
+            </summary>
+        </member>
+        <member name="P:DBreezeBased.DocumentsStorage.SearchRequest.SearchWords">
+            <summary>
+            Words separated by space or whatever to search
+            </summary>
+        </member>
+        <member name="P:DBreezeBased.DocumentsStorage.SearchRequest.Quantity">
+            <summary>
+            Results quantity. Lower value - lower RAM and speed economy.
+            </summary>
+        </member>
+        <member name="P:DBreezeBased.DocumentsStorage.SearchRequest.SearchLogicType">
+            <summary>
+            AND/OR. Default OR
+            </summary>
+        </member>
+        <member name="P:DBreezeBased.DocumentsStorage.SearchRequest.IncludeDocuments">
+            <summary>
+            Include complete documents or just internal documents IDs. Default is true
+            </summary>
+        </member>
+        <member name="P:DBreezeBased.DocumentsStorage.SearchRequest.IncludeDocumentsContent">
+            <summary>
+            Include document content (default true). Only matters together with IncludeDocuments = true;
+            </summary>
+        </member>
+        <member name="P:DBreezeBased.DocumentsStorage.SearchRequest.IncludeDocumentsSearchanbles">
+            <summary>
+            Include document searchables (default false). Only matters together with IncludeDocuments = true;
+            </summary>
+        </member>
+        <member name="P:DBreezeBased.DocumentsStorage.SearchRequest.MaximalExcludingOccuranceOfTheSearchPattern">
+            <summary>
+            Default value is 10000. It means if such word's Starts With found more than "MaximalExcludingOccuranceOfTheSearchPattern" times, 
+            it will be excluded from the search.
+            For example, after uploading 122 russian books and having 700000 unique words, we try to search combination of "ал".
+            We have found it 3240 times:
+            ал
+            ала
+            алабан
+            алаберная
+            алаберный
+            алаболки
+            алаболь
+            ...
+            etc.
+            !This is not the quantity of documents where such pattern exists, but StartsWith result of all unique words in the document space!
+            </summary>
+        </member>
+        <member name="T:DBreezeBased.DocumentsStorage.SearchResponse">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="P:DBreezeBased.DocumentsStorage.SearchResponse.ResultCode">
+            <summary>
+            ResultCode
+            </summary>
+        </member>
+        <member name="P:DBreezeBased.DocumentsStorage.SearchResponse.Documents">
+            <summary>
+            Either Documents or DocumentsInternalIds, depending upon SearchRequest
+            </summary>
+        </member>
+        <member name="P:DBreezeBased.DocumentsStorage.SearchResponse.DocumentsInternalIds">
+            <summary>
+            Either Documents or DocumentsInternalIds, depending upon SearchRequest
+            </summary>
+        </member>
+        <member name="P:DBreezeBased.DocumentsStorage.SearchResponse.DocumentSpace">
+            <summary>
+            Doucument space which was searched
+            </summary>
+        </member>
+        <member name="F:DBreezeBased.DocumentsStorage.SearchResponse.SearchDurationMs">
+            <summary>
+            SearchDurationMs
+            </summary>
+        </member>
+        <member name="F:DBreezeBased.DocumentsStorage.SearchResponse.UniqueWordsInDataSpace">
+            <summary>
+            UniqueWordsInDataSpace
+            </summary>
+        </member>
+        <member name="P:DBreezeBased.DocumentsStorage.SearchResponse.SearchCriteriaIsOverloaded">
+            <summary>
+            SearchCriteriaIsOverloaded. When one of words in search request contains more then 1000 intersections it will become true.
+            It can mean that better is to change search word criteria.
+            Lobster 
+            Lopata
+            ...
+            Loshad
+            Lom 
+            .. e.g. words starting from "Lo" is more then 10000
+            ......and we search by "Lo".
+            This "Lo" will be automatically excluded from search?
+            </summary>
+        </member>
+        <member name="T:DBreezeBased.DocumentsStorage.Storage">
+            <summary>
+            Main class to start DocumentsStorage operations
+            </summary>
+        </member>
+        <member name="F:DBreezeBased.DocumentsStorage.Storage.MyName">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="F:DBreezeBased.DocumentsStorage.Storage.DocumentsStorageTablesPrefix">
+            <summary>
+            DBreeze table name prefix. Default dcstr. Tables concerning DBreezeBased.DocumentsStorage will start from this prefix
+            </summary>
+        </member>
+        <member name="F:DBreezeBased.DocumentsStorage.Storage.SearchWordMinimalLength">
+            <summary>
+            Must stay 2 if you want to search starting from 2 letters or bigger in other case.        
+            Minimal lenght of the search word among the document.
+            Document searchables will be prepared due to this value.
+            </summary>
+        </member>
+        <member name="F:DBreezeBased.DocumentsStorage.Storage.FullTextOnly">
+            <summary>
+            If true, then only CompleteWord or StartsWith will work, search in the middle of the word will not be possible.
+            Default false.
+            </summary>
+        </member>
+        <member name="F:DBreezeBased.DocumentsStorage.Storage.MaxCharsToBeProcessedPerRound">
+            <summary>
+            Engine processes newly added documents by chunks limited by quantity of chars.
+            More chars - more RAM for one block processing. Default value is 10MLN chars.
+            Probably for mobile telephones this value must be decreased to 100K.
+            </summary>
+        </member>
+        <member name="F:DBreezeBased.DocumentsStorage.Storage.MaxQuantityOfWordsToBeSearched">
+            <summary>
+            Default is 10. MaxQuantityOfWordsToBeSearched via SearchDocumentSpace
+            </summary>
+        </member>
+        <member name="E:DBreezeBased.DocumentsStorage.Storage.OnProcessingStarted">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="E:DBreezeBased.DocumentsStorage.Storage.OnProcessingStopped">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="F:DBreezeBased.DocumentsStorage.Storage.DBreezeEngine">
+            <summary>
+            DBreeze engine must be supplied
+            </summary>
+        </member>
+        <member name="F:DBreezeBased.DocumentsStorage.Storage.QuantityOfWordsInBlock">
+            <summary>
+            Search Index setting. Less value - bigger index on the disc, and faster search
+            </summary>
+        </member>
+        <member name="F:DBreezeBased.DocumentsStorage.Storage.MinimalBlockReservInBytes">
+            <summary>
+            Search Index setting. 
+            </summary>
+        </member>
+        <member name="M:DBreezeBased.DocumentsStorage.Storage.ThrowException(System.String,System.String)">
+            <summary>
+            
+            </summary>
+            <param name="methodName"></param>
+            <param name="content"></param>
+        </member>
+        <member name="M:DBreezeBased.DocumentsStorage.Storage.#ctor(DBreeze.DBreezeEngine)">
+            <summary>
+            Constructor (automatically starts unfinished indexing job)
+            </summary>
+            <param name="DBreezeEngine">must be already initialized</param>
+        </member>
+        <member name="M:DBreezeBased.DocumentsStorage.Storage.Storage_OnProcessingStopped">
+            <summary>
+            Empty subscriber
+            </summary>
+        </member>
+        <member name="M:DBreezeBased.DocumentsStorage.Storage.Storage_OnProcessingStarted">
+            <summary>
+            Empty subscriber
+            </summary>
+        </member>
+        <member name="T:DBreezeBased.DocumentsStorage.Storage.I1">
+            <summary>
+            Tech calss
+            </summary>
+        </member>
+        <member name="M:DBreezeBased.DocumentsStorage.Storage.ReindexDocuments">
+            <summary>
+            Deletes "s" and "p" tables from every document space and recreates search indexes for all non-deleted documents in all document spaces.
+            </summary>
+        </member>
+        <member name="T:DBreezeBased.DocumentsStorage.Storage.InTran_DocumentAppender">
+            <summary>
+            To be used inside of ready transaction.
+            All table syncs must be already done
+            </summary>
+        </member>
+        <member name="M:DBreezeBased.DocumentsStorage.Storage.InTran_DocumentAppender.#ctor(DBreeze.Transactions.Transaction,System.String)">
+            <summary>
+            
+            </summary>
+            <param name="_tran"></param>
+            <param name="_DocumentsStorageTablesPrefix"></param>
+        </member>
+        <member name="M:DBreezeBased.DocumentsStorage.Storage.InTran_DocumentAppender.RemoveDocument(DBreezeBased.DocumentsStorage.Document)">
+            <summary>
+            Supplied document must already have DocumentSpaceId filled.
+            Must be Synced tables: DocumentsStorageTablesPrefix + "p", and all DocumentsStorageTablesPrefix + "d" + doc.DocumentSpaceId
+            </summary>
+            <param name="doc"></param>
+        </member>
+        <member name="M:DBreezeBased.DocumentsStorage.Storage.InTran_DocumentAppender.AppendDocument(DBreezeBased.DocumentsStorage.Document)">
+            <summary>
+            Supplied document must already have DocumentSpaceId filled.
+            Must be Synced tables: DocumentsStorageTablesPrefix + "p", and all DocumentsStorageTablesPrefix + "d" + doc.DocumentSpaceId
+            </summary>
+            <param name="doc"></param>
+        </member>
+        <member name="M:DBreezeBased.DocumentsStorage.Storage.AddDocuments(System.Collections.Generic.IList{DBreezeBased.DocumentsStorage.Document})">
+            <summary>
+            Adds documents to the storage.
+            </summary>
+            <param name="docs">Documents to  be added</param>
+            <returns>Can return empty list in case of misunderstandings, or the same list back with cleaned Searchables, Content and set InternalId</returns>
+        </member>
+        <member name="M:DBreezeBased.DocumentsStorage.Storage.StartDocumentsIndexing">
+            <summary>
+            <para>Activating of documents indexing.</para>  
+            <para>Runs in a separate thread and doesn't block calling thread.</para>
+            <para>Must be called right after AddDocuments routine</para>
+            </summary>
+        </member>
+        <member name="T:DBreezeBased.DocumentsStorage.Storage.I2">
+            <summary>
+            Technical class
+            </summary>
+        </member>
+        <member name="F:DBreezeBased.DocumentsStorage.Storage.I2.doc">
+            <summary>
+            Can be null
+            </summary>
+        </member>
+        <member name="F:DBreezeBased.DocumentsStorage.Storage.I2.VersionDocumentToRemove">
+            <summary>
+            Flag (if not null) indicates that we must remove document from the search and clean VersionTable
+            </summary>
+        </member>
+        <member name="P:DBreezeBased.DocumentsStorage.Storage.IsProcessing">
+            <summary>
+            Indicates that system is in document processing mode
+            </summary>
+        </member>
+        <member name="M:DBreezeBased.DocumentsStorage.Storage.ProcessDocsAtOnce">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="T:DBreezeBased.DocumentsStorage.Storage.WordInDoc">
+            <summary>
+            ...
+            </summary>
+        </member>
+        <member name="F:DBreezeBased.DocumentsStorage.Storage.WordInDoc.docsAdded">
+            <summary>
+            Docs which contain this word
+            </summary>
+        </member>
+        <member name="F:DBreezeBased.DocumentsStorage.Storage.WordInDoc.docsRemoved">
+            <summary>
+            Docs which must be removed from word WAH
+            </summary>
+        </member>
+        <member name="M:DBreezeBased.DocumentsStorage.Storage.ProcessDocsBlock(System.Collections.Generic.List{DBreezeBased.DocumentsStorage.Storage.I2})">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="F:DBreezeBased.DocumentsStorage.Storage.VerboseConsoleEnabled">
+            <summary>
+            Initializes useful console ouputs if true
+            </summary>
+        </member>
+        <member name="M:DBreezeBased.DocumentsStorage.Storage.Verbose(System.String,System.Object[])">
+            <summary>
+            
+            </summary>
+            <param name="format"></param>
+            <param name="args"></param>
+        </member>
+        <member name="T:DBreezeBased.DocumentsStorage.Storage.WordDefinition">
+            <summary>
+            
+            </summary>        
+        </member>
+        <member name="M:DBreezeBased.DocumentsStorage.Storage.GetWordsDefinitionFromText(System.String)">
+            <summary>
+            Returns null in case of notfound anything or what ever
+            </summary>
+            <param name="text"></param>
+            <returns></returns>
+        </member>
+        <member name="M:DBreezeBased.DocumentsStorage.Storage.RetrieveDocument(System.Boolean,System.Boolean,DBreeze.DataTypes.NestedTable,DBreeze.DataTypes.Row{System.Int32,System.Byte[]})">
+            <summary>
+            
+            </summary>
+            <param name="includeContent"></param>
+            <param name="includeSearchables"></param>
+            <param name="dt"></param>
+            <param name="docRow"></param>
+            <returns></returns>
+        </member>
+        <member name="M:DBreezeBased.DocumentsStorage.Storage.GetDocById(System.Int64,System.Int32,System.Boolean,System.Boolean,DBreeze.Transactions.Transaction)">
+            <summary>
+            
+            </summary>
+            <param name="docSpaceId"></param>
+            <param name="internalId"></param>
+            <param name="includeContent"></param>
+            <param name="includeSearchables"></param>
+            <param name="tran"></param>
+            <returns></returns>
+        </member>
+        <member name="M:DBreezeBased.DocumentsStorage.Storage.InTran_GetDocumentSpaceId(DBreeze.Transactions.Transaction,System.String)">
+            <summary>
+            Function to be used inside of internal transaction
+            </summary>
+            <param name="tran"></param>
+            <param name="documentSpace"></param>
+            <returns></returns>
+        </member>
+        <member name="M:DBreezeBased.DocumentsStorage.Storage.GetDocumentSpaceId(System.String,System.Boolean)">
+            <summary>
+            Returns DocumentSpaceId (internally opens new transaction)
+            </summary>
+            <param name="documentSpace"></param>
+            <param name="createIfNotFound"></param>
+            <returns></returns>
+        </member>
+        <member name="M:DBreezeBased.DocumentsStorage.Storage.GetDocumentSpaceId(System.String,System.Boolean,DBreeze.Transactions.Transaction)">
+            <summary>
+            Note DocumentsStorageTablesPrefix + "m" must be sysnchronized
+            Returns DocumentSpaceId (internally opens new transaction)
+            </summary>
+            <param name="documentSpace"></param>
+            <param name="createIfNotFound"></param>
+            <param name="tran"></param>
+            <returns></returns>
+        </member>
+        <member name="M:DBreezeBased.DocumentsStorage.Storage.GetDocumentByExternalID(System.String,System.String,System.Boolean,System.Boolean)">
+            <summary>
+            Can return null, if not found.
+             (internally opens new transaction)
+            </summary>
+            <param name="documentSpace"></param>
+            <param name="externalId"></param>
+            <param name="includeContent"></param>
+            <param name="includeSearchables"></param>
+            <returns></returns>
+        </member>
+        <member name="M:DBreezeBased.DocumentsStorage.Storage.GetDocumentByInternalID(System.String,System.Int32,System.Boolean,System.Boolean)">
+            <summary>
+             Can return null, if not found
+            </summary>
+            <param name="internalID"></param>
+            <returns></returns>
+        </member>
+        <member name="M:DBreezeBased.DocumentsStorage.Storage.GetDocumentsByInternalIDs(System.String,System.Collections.Generic.IList{System.Int32},System.Boolean,System.Boolean)">
+            <summary>
+            Returning list can contain null values
+            </summary>
+            <param name="documentSpace"></param>
+            <param name="internalIDs"></param>
+            <param name="includeContent"></param>
+            <param name="includeSearchables"></param>
+            <returns></returns>
+        </member>
+        <member name="M:DBreezeBased.DocumentsStorage.Storage.RemoveDocumentByExternalID(System.String,System.String)">
+            <summary>
+            RemoveDocumentByExternalID
+            </summary>
+            <param name="externalID"></param>
+        </member>
+        <member name="M:DBreezeBased.DocumentsStorage.Storage.RemoveDocumentByInternalID(System.String,System.Int32)">
+            <summary>
+            RemoveDocumentByInternalID
+            </summary>
+            <param name="internalID"></param>
+        </member>
+        <member name="M:DBreezeBased.DocumentsStorage.Storage.RemoveDocumentInternal(System.Int64,System.Int32,System.String,DBreeze.Transactions.Transaction)">
+            <summary>
+            
+            </summary>
+            <param name="docSpaceId"></param>
+            <param name="internalId"></param>
+            <param name="tran"></param>
+        </member>
+        <member name="M:DBreezeBased.DocumentsStorage.Storage.GetListOfDocumentVersions(System.String,System.String)">
+            <summary>
+            Will be returned sequential id's of document
+            </summary>
+            <param name="documentSpace"></param>
+            <param name="externalId"></param>
+            <returns></returns>
+        </member>
+        <member name="M:DBreezeBased.DocumentsStorage.Storage.GetListOfDocumentVersions(System.String,System.Int32)">
+            <summary>
+            Will be returned sequential id's of document
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:DBreezeBased.DocumentsStorage.Storage.GetListOfDocumentVersionsInternal(System.Int64,System.Int32,DBreeze.Transactions.Transaction,System.Collections.Generic.List{System.Int32})">
+            <summary>
+            
+            </summary>
+            <param name="internalId"></param>
+            <returns></returns>
+        </member>
+        <member name="M:DBreezeBased.DocumentsStorage.Storage.RollbackToVersion(System.String,System.Int32,System.Int32)">
+            <summary>
+            Rollbacks document (marked with internalId) to its version (marked as sequentialId).
+            Can restore even completely deleted document
+            </summary>
+            <param name="documentSpace"></param>
+            <param name="internalId">internal number of the document group (all versions of one document)</param>
+            <param name="sequentialId"></param>
+            <returns></returns>
+        </member>
+        <member name="M:DBreezeBased.DocumentsStorage.Storage.SearchDocumentSpace(DBreezeBased.DocumentsStorage.SearchRequest,DBreeze.Transactions.Transaction)">
+            <summary>
+            If is called from transaction, then tran must be supplied
+            </summary>
+            <param name="req"></param>
+            <param name="tran"></param>
+            <returns></returns>
+        </member>
+        <member name="M:DBreezeBased.DocumentsStorage.Storage.PrepareSearchKeyWords(System.String)">
+            <summary>
+            Only distinct only 
+            </summary>
+            <param name="searchKeywords"></param>
+        </member>
+        <member name="T:DBreezeBased.DocumentsStorage.WAH2">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="M:DBreezeBased.DocumentsStorage.WAH2.#ctor">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="M:DBreezeBased.DocumentsStorage.WAH2.#ctor(System.Byte[])">
+            <summary>
+            Must be supplied CompressedByteArray taken from GetCompressedByteArray function
+            </summary>
+            <param name="array"></param>
+        </member>
+        <member name="M:DBreezeBased.DocumentsStorage.WAH2.GetUncompressedByteArray">
+            <summary>
+            Working byte[]
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:DBreezeBased.DocumentsStorage.WAH2.GetCompressedByteArray">
+            <summary>
+            With extra protocol definition, ready for save into DB
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:DBreezeBased.DocumentsStorage.WAH2.Add(System.Int32,System.Boolean)">
+            <summary>
+            
+            </summary>
+            <param name="index"></param>
+            <param name="value"></param>
+        </member>
+        <member name="M:DBreezeBased.DocumentsStorage.WAH2.Resize(System.Int32)">
+            <summary>
+            
+            </summary>
+            <param name="len"></param>
+        </member>
+        <member name="M:DBreezeBased.DocumentsStorage.WAH2.Contains(System.Int32)">
+            <summary>
+            
+            </summary>
+            <param name="index"></param>
+            <returns></returns>
+        </member>
+        <member name="M:DBreezeBased.DocumentsStorage.WAH2.MergeAllUncompressedIntoOne(System.Collections.Generic.List{System.Byte[]})">
+            <summary>
+            Using OR logic: 1|1 = 1|0 = 1; 0|0 = 0
+            </summary>
+            <param name="indexesToMerge"></param>
+            <returns></returns>
+        </member>
+        <member name="F:DBreezeBased.DocumentsStorage.WAH2.ExistsInDB">
+            <summary>
+            Technical if already in DB
+            </summary>
+        </member>
+        <member name="M:DBreezeBased.DocumentsStorage.WAH2.TextSearch_AND_logic(System.Collections.Generic.List{System.Byte[]})">
+            <summary>
+            Returns last added documents first
+            </summary>
+            <param name="indexesToCheck"></param>
+            <returns></returns>
+        </member>
+        <member name="M:DBreezeBased.DocumentsStorage.WAH2.TextSearch_OR_logic(System.Collections.Generic.List{System.Byte[]},System.Int32)">
+            <summary>
+            
+            </summary>
+            <param name="indexesToCheck"></param>
+            <param name="maximalReturnQuantity"></param>
+            <returns></returns>
+        </member>
+        <member name="M:DBreezeBased.Serialization.ProtobufSerializer.DeserializeProtobuf``1(System.Byte[])">
+            <summary>
+            Deserializes protobuf object from byte[]
+            </summary>
+            <typeparam name="T"></typeparam>
+            <param name="data"></param>
+            <returns></returns>
+        </member>
+        <member name="M:DBreezeBased.Serialization.ProtobufSerializer.DeserializeProtobuf(System.Byte[],System.Type)">
+            <summary>
+            Deserializes protobuf object from byte[]. Non-generic style.
+            </summary>
+            <param name="data"></param>
+            <param name="T"></param>
+            <returns></returns>
+        </member>
+        <member name="M:DBreezeBased.Serialization.ProtobufSerializer.SerializeProtobuf(System.Object)">
+            <summary>
+            Serialize object using protobuf serializer
+            </summary>
+            <param name="data"></param>
+            <returns></returns>
+        </member>
+    </members>
+</doc>
