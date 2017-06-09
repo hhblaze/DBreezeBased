@@ -4,8 +4,7 @@ DBreezeBased
 ![Image of Build](https://img.shields.io/badge/License-BSD%203,%20FOSS-FC0574.svg) 
 ![Image of Build](https://img.shields.io/badge/Powered%20by-tiesky.com-1883F5.svg)
 
-<b>Text-Search engine integrated into DBreeze itself. </b>
-Though this project will be supported also.
+<b>Text-Search engine integrated into DBreeze itself and is out of support.</b>
 </br> 
 DBreezeBased enables Google-like search in your application. It's an embedded ACID Document database and a Text Search engine, based on DBreeze database - dbreeze.tiesky.com. Written on C# for Xamarin, Mono and .NET 4.5
 
