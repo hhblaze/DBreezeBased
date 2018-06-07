@@ -1298,6 +1298,11 @@
             <para>Mobile recommendations year 2015: 1000</para>
             </summary>
         </member>
+        <member name="F:DBreeze.DBreezeConfiguration.TextSearchConfiguration.MaximalWordSize">
+            <summary>
+            Maximal word size separated by the space. Default is 50 symbols
+            </summary>
+        </member>
         <member name="F:DBreeze.DBreezeConfiguration.TextSearchConfig">
             <summary>
             Configuration concerning TextSearch subsystem
@@ -1704,13 +1709,6 @@
             Flag can be setup only via nested table or transaction
             </summary>
         </member>
-        <member name="F:DBreeze.LianaTrie.LTrie.ValuesLazyLoadingIsOn">
-            <summary>
-            When it's on iterators, Select and SelectDirect return Row with the key and a pointer to the value.
-            <par>Value will be read out when we call it Row.Value.</par>
-            <pa>When it's off we read value together with the key in one round</pa>
-            </summary>
-        </member>
         <member name="M:DBreeze.LianaTrie.LTrie.#ctor(DBreeze.Storage.IStorage)">
             <summary>
             Liana Trie
@@ -1733,6 +1731,7 @@
             
             </summary>
             <param name="row"></param>
+            <param name="btKey"></param>
             <param name="tableIndex"></param>
             <param name="masterTrie"></param>
             <param name="insertTable">Regulates if InsertTable or SelectTable was called (ability to create table if it doesn't exist)</param>
@@ -1827,73 +1826,23 @@
             <param name="SYNCHRO_READ"></param>
             <returns></returns>
         </member>
-        <member name="M:DBreeze.LianaTrie.LTrie.GetKey(System.Byte[],System.Boolean)">
+        <member name="M:DBreeze.LianaTrie.LTrie.GetKey(System.Byte[],System.Boolean,System.Boolean)">
             <summary>
-            if useCache = true; uses newly created root node, else uses writing root node
+             if useCache = true; uses newly created root node, else uses writing root node
             </summary>
             <param name="key"></param>
+            <param name="useCache"></param>
+            <param name="ValuesLazyLoadingIsOn"></param>
             <returns></returns>
         </member>
-        <member name="M:DBreeze.LianaTrie.LTrie.GetKey(System.Byte[]@,DBreeze.Tries.ITrieRootNode)">
+        <member name="M:DBreeze.LianaTrie.LTrie.GetKey(System.Byte[]@,DBreeze.Tries.ITrieRootNode,System.Boolean)">
             <summary>
             DBreeze compatible.
             Extension, which helps to READ-THREADS smartly utilize created before read-roots
             </summary>
             <param name="key"></param>
             <param name="readRootNode">if null then WRITE-ROOT NODE</param>
-            <returns></returns>
-        </member>
-        <member name="M:DBreeze.LianaTrie.LTrie.IterateForwardStartsWith(System.Byte[])">
-            <summary>
-            Always creates new root to get committed data
-            </summary>
-            <param name="startKey"></param>
-            <returns></returns>
-        </member>
-        <member name="M:DBreeze.LianaTrie.LTrie.IterateForwardStartsWithClosestToPrefix(System.Byte[])">
-            <summary>
-            
-            </summary>
-            <param name="startKey"></param>
-            <returns></returns>
-        </member>
-        <member name="M:DBreeze.LianaTrie.LTrie.IterateForwardStartsWithClosestToPrefix(System.Byte[],System.Boolean)">
-            <summary>
-            
-            </summary>
-            <param name="startKey"></param>
-            <param name="useCache"></param>
-            <returns></returns>
-        </member>
-        <member name="M:DBreeze.LianaTrie.LTrie.IterateForwardStartsWithClosestToPrefix(System.Byte[],DBreeze.Tries.ITrieRootNode)">
-            <summary>
-            
-            </summary>
-            <param name="startKey"></param>
-            <param name="readRootNode"></param>
-            <returns></returns>
-        </member>
-        <member name="M:DBreeze.LianaTrie.LTrie.IterateBackwardStartsWithClosestToPrefix(System.Byte[])">
-            <summary>
-            
-            </summary>
-            <param name="startKey"></param>
-            <returns></returns>
-        </member>
-        <member name="M:DBreeze.LianaTrie.LTrie.IterateBackwardStartsWithClosestToPrefix(System.Byte[],System.Boolean)">
-            <summary>
-            
-            </summary>
-            <param name="startKey"></param>
-            <param name="useCache"></param>
-            <returns></returns>
-        </member>
-        <member name="M:DBreeze.LianaTrie.LTrie.IterateBackwardStartsWithClosestToPrefix(System.Byte[],DBreeze.Tries.ITrieRootNode)">
-            <summary>
-            
-            </summary>
-            <param name="startKey"></param>
-            <param name="readRootNode"></param>
+            <param name="ValuesLazyLoadingIsOn"></param>
             <returns></returns>
         </member>
         <member name="M:DBreeze.LianaTrie.LTrie.SingleCommit">
@@ -2047,11 +1996,13 @@
             <param name="deletedValue">interesting only if WasRemoved = true and retrieveDeletedValue is true</param>
             <returns></returns>
         </member>
-        <member name="M:DBreeze.LianaTrie.LTrieRootNode.GetKey(System.Byte[],System.Boolean)">
+        <member name="M:DBreeze.LianaTrie.LTrieRootNode.GetKey(System.Byte[],System.Boolean,System.Boolean)">
             <summary>
             
             </summary>
             <param name="key"></param>
+            <param name="useCache"></param>
+            <param name="ValuesLazyLoadingIsOn">if true reads key only</param>
             <returns></returns>
         </member>
         <member name="F:DBreeze.LianaTrie.LTrieSetupKidResult.ValueLink">
@@ -3563,6 +3514,11 @@
             Possible only between blocks
             </summary>
         </member>
+        <member name="F:DBreeze.TextSearch.SBlock.Ignored">
+            <summary>
+            Block will not be counted in intersection calculations if has empty FullMatch and Contains words
+            </summary>
+        </member>
         <member name="F:DBreeze.TextSearch.SBlock._tsm">
             <summary>
             TextSearchManager
@@ -3595,72 +3551,80 @@
             Generation-term
             </summary>
         </member>
-        <member name="M:DBreeze.TextSearch.SBlock.And(System.String,System.String,System.Boolean)">
+        <member name="M:DBreeze.TextSearch.SBlock.And(System.String,System.String,System.Boolean,System.Boolean)">
             <summary>
             Adding new logical block (And or Or, depending upon parameter blockAnd)
             </summary>
             <param name="containsWords">space separated words to be used by "contains" logic</param>
             <param name="fullMatchWords">space separated words to be used by "full-match" logic</param>
             <param name="blockAnd">default value is true, indicating and block</param>
+            <param name="ignoreOnEmptyParameters">Block will not be counted in intersection calculations if has empty FullMatch and Contains words</param>
             <returns></returns>
         </member>
-        <member name="M:DBreeze.TextSearch.SBlock.Or(System.String,System.String,System.Boolean)">
+        <member name="M:DBreeze.TextSearch.SBlock.Or(System.String,System.String,System.Boolean,System.Boolean)">
             <summary>
             Adding new logical block (And or Or, depending upon parameter blockAnd)
             </summary>
             <param name="containsWords">space separated words to be used by "contains" logic</param>
             <param name="fullMatchWords">space separated words to be used by "full-match" logic</param>
             <param name="blockAnd">default value is true, indicating and block</param>
+            <param name="ignoreOnEmptyParameters">Block will not be counted in intersection calculations if has empty FullMatch and Contains words</param>
             <returns></returns>
         </member>
-        <member name="M:DBreeze.TextSearch.SBlock.Xor(System.String,System.String,System.Boolean)">
+        <member name="M:DBreeze.TextSearch.SBlock.Xor(System.String,System.String,System.Boolean,System.Boolean)">
             <summary>
             Adding new logical block (And or Or, depending upon parameter blockAnd)
             </summary>
             <param name="containsWords">space separated words to be used by "contains" logic</param>
             <param name="fullMatchWords">space separated words to be used by "full-match" logic</param>
             <param name="blockAnd">default value is true, indicating and block</param>
+            <param name="ignoreOnEmptyParameters">Block will not be counted in intersection calculations if has empty FullMatch and Contains words</param>
             <returns></returns>
         </member>
-        <member name="M:DBreeze.TextSearch.SBlock.Exclude(System.String,System.String,System.Boolean)">
+        <member name="M:DBreeze.TextSearch.SBlock.Exclude(System.String,System.String,System.Boolean,System.Boolean)">
             <summary>
             Adding new logical block (And or Or, depending upon parameter blockAnd)
             </summary>
             <param name="containsWords">space separated words to be used by "contains" logic</param>
             <param name="fullMatchWords">space separated words to be used by "full-match" logic</param>
             <param name="blockAnd">default value is true, indicating and block</param>
+            <param name="ignoreOnEmptyParameters">Block will not be counted in intersection calculations if has empty FullMatch and Contains words</param>
             <returns></returns>
         </member>
-        <member name="M:DBreeze.TextSearch.SBlock.And(DBreeze.TextSearch.SBlock)">
+        <member name="M:DBreeze.TextSearch.SBlock.And(DBreeze.TextSearch.SBlock,System.Boolean)">
             <summary>
             Returns last added block. Can be added existing block or new block in format
             new DBreeze.TextSearch.BlockAnd(... or new DBreeze.TextSearch.BlockOr(
             </summary>
             <param name="block"></param>
+            <param name="ignoreOnEmptyParameters">Block will not be counted in intersection calculations if has empty FullMatch and Contains words</param>
             <returns></returns>
         </member>
-        <member name="M:DBreeze.TextSearch.SBlock.Or(DBreeze.TextSearch.SBlock)">
+        <member name="M:DBreeze.TextSearch.SBlock.Or(DBreeze.TextSearch.SBlock,System.Boolean)">
             <summary>
             Returns last added block. Can be added existing block or new block in format
             new DBreeze.TextSearch.BlockAnd(... or new DBreeze.TextSearch.BlockOr(
             </summary>
             <param name="block"></param>
+            <param name="ignoreOnEmptyParameters">Block will not be counted in intersection calculations if has empty FullMatch and Contains words</param>
             <returns></returns>
         </member>
-        <member name="M:DBreeze.TextSearch.SBlock.Xor(DBreeze.TextSearch.SBlock)">
+        <member name="M:DBreeze.TextSearch.SBlock.Xor(DBreeze.TextSearch.SBlock,System.Boolean)">
             <summary>
             Returns last added block. Can be added existing block or new block in format
             new DBreeze.TextSearch.BlockAnd(... or new DBreeze.TextSearch.BlockOr(
             </summary>
             <param name="block"></param>
+            <param name="ignoreOnEmptyParameters">Block will not be counted in intersection calculations if has empty FullMatch and Contains words</param>
             <returns></returns>
         </member>
-        <member name="M:DBreeze.TextSearch.SBlock.Exclude(DBreeze.TextSearch.SBlock)">
+        <member name="M:DBreeze.TextSearch.SBlock.Exclude(DBreeze.TextSearch.SBlock,System.Boolean)">
             <summary>
             Returns last added block. Can be added existing block or new block in format
             new DBreeze.TextSearch.BlockAnd(... or new DBreeze.TextSearch.BlockOr(
             </summary>
             <param name="block"></param>
+            <param name="ignoreOnEmptyParameters">Block will not be counted in intersection calculations if has empty FullMatch and Contains words</param>
             <returns></returns>
         </member>
         <member name="M:DBreeze.TextSearch.SBlock.GetDocumentIDs">
@@ -3828,13 +3792,14 @@
             
             </summary>        
         </member>
-        <member name="M:DBreeze.TextSearch.TextSearchHandler.GetWordsDefinitionFromText(System.String,System.String,System.Int32)">
+        <member name="M:DBreeze.TextSearch.TextSearchHandler.GetWordsDefinitionFromText(System.String,System.String,System.Int32,System.Int32)">
             <summary>
             Returns null in case of notfound anything or what ever
             </summary>
             <param name="containsWords"></param>
             <param name="fullMatchWords"></param>
             <param name="containsMinimalLength"></param>
+            <param name="maxWordSize">Taken from configuration. Default is 50. word separated by spaces</param>
             <returns></returns>
         </member>
         <member name="T:DBreeze.TextSearch.TextSearchTable">
@@ -3906,7 +3871,7 @@
             
             </summary>
         </member>
-        <member name="M:DBreeze.TextSearch.TextSearchTable.Block(System.String,System.String,System.Boolean)">
+        <member name="M:DBreeze.TextSearch.TextSearchTable.Block(System.String,System.String,System.Boolean,System.Boolean)">
             <summary>
             Generates a logical block: 
             var tsm = tran.TextSearch("MyTextSearchTable");
@@ -3916,9 +3881,10 @@
             <param name="containsWords">space separated words to be used by "contains" logic or startswith if words were stored by full-match logic</param>
             <param name="fullMatchWords">space separated words to be used by "full-match" logic</param>
             <param name="blockAnd">default value is true, indicating BlockAnd</param>
+            <param name="ignoreOnEmptyParameters">Block will not be counted in intersection calculations if has empty FullMatch and Contains words</param>
             <returns></returns>
         </member>
-        <member name="M:DBreeze.TextSearch.TextSearchTable.BlockAnd(System.String,System.String)">
+        <member name="M:DBreeze.TextSearch.TextSearchTable.BlockAnd(System.String,System.String,System.Boolean)">
             <summary>
             Generates a logical block: 
             var tsm = tran.TextSearch("MyTextSearchTable");
@@ -3926,10 +3892,11 @@
             .GetDocumentIDs
             </summary>
             <param name="containsWords">space separated words to be used by "contains" logic</param>
-            <param name="fullMatchWords">space separated words to be used by "full-match" logic</param>        
+            <param name="fullMatchWords">space separated words to be used by "full-match" logic</param>   
+            <param name="ignoreOnEmptyParameters">Block will not be counted in intersection calculations if has empty FullMatch and Contains words</param>
             <returns></returns>
         </member>
-        <member name="M:DBreeze.TextSearch.TextSearchTable.BlockAnd(System.Collections.Generic.IEnumerable{System.String},System.Collections.Generic.IEnumerable{System.String})">
+        <member name="M:DBreeze.TextSearch.TextSearchTable.BlockAnd(System.Collections.Generic.IEnumerable{System.String},System.Collections.Generic.IEnumerable{System.String},System.Boolean)">
             <summary>
             Generates a logical block: 
             var tsm = tran.TextSearch("MyTextSearchTable");
@@ -3938,9 +3905,10 @@
             </summary>
             <param name="containsWords">space separated words to be used by "contains" logic or startswith if words were stored by full-match logic</param>
             <param name="fullMatchWords">space separated words to be used by "full-match" logic</param>
+            <param name="ignoreOnEmptyParameters">Block will not be counted in intersection calculations if has empty FullMatch and Contains words</param>
             <returns></returns>
         </member>
-        <member name="M:DBreeze.TextSearch.TextSearchTable.BlockOr(System.String,System.String)">
+        <member name="M:DBreeze.TextSearch.TextSearchTable.BlockOr(System.String,System.String,System.Boolean)">
             <summary>
             Generates a logical block: 
             var tsm = tran.TextSearch("MyTextSearchTable");
@@ -3949,9 +3917,10 @@
             </summary>
             <param name="containsWords">space separated words to be used by "contains" logic or startswith if words were stored by full-match logic</param>
             <param name="fullMatchWords">space separated words to be used by "full-match" logic</param>
+            <param name="ignoreOnEmptyParameters">Block will not be counted in intersection calculations if has empty FullMatch and Contains words</param>
             <returns></returns>
         </member>
-        <member name="M:DBreeze.TextSearch.TextSearchTable.BlockOr(System.Collections.Generic.IEnumerable{System.String},System.Collections.Generic.IEnumerable{System.String})">
+        <member name="M:DBreeze.TextSearch.TextSearchTable.BlockOr(System.Collections.Generic.IEnumerable{System.String},System.Collections.Generic.IEnumerable{System.String},System.Boolean)">
             <summary>
             Generates a logical block: 
             var tsm = tran.TextSearch("MyTextSearchTable");
@@ -3960,6 +3929,7 @@
             </summary>
             <param name="containsWords">space separated words to be used by "contains" logic</param>
             <param name="fullMatchWords">space separated words to be used by "full-match" logic</param>
+            <param name="ignoreOnEmptyParameters">Block will not be counted in intersection calculations if has empty FullMatch and Contains words</param>
             <returns></returns>
         </member>
         <member name="M:DBreeze.TextSearch.TextSearchTable.WordsPrepare(System.Collections.Generic.IEnumerable{System.String},System.Boolean,System.Collections.Generic.Dictionary{System.String,System.Boolean}@)">
@@ -4177,6 +4147,11 @@
             In case if entity was inserted is set to true
             </summary>
         </member>
+        <member name="P:DBreeze.Objects.DBreezeObjectInsertResult`1.PtrToObject">
+            <summary>
+            Pointer to DBreezeObject, ObjectGetByFixedAddress should help to retrieve it.
+            </summary>
+        </member>
         <member name="T:DBreeze.Transactions.RandomKeySorter">
             <summary>
             Speeding up, space economy. Represents a mechanism helping to store entites into the memory, before insert or remove.
@@ -4299,8 +4274,9 @@
         <member name="P:DBreeze.Transactions.Transaction.ValuesLazyLoadingIsOn">
             <summary>
             When it's on iterators return Row with the key and a pointer to the value.
-            <par>Value will be read out when we call it Row.Value.</par>
-            <pa>When it's off we read value together with the key in one round</pa>
+            <para>Value will be read out when we call it Row.Value.</para>
+            <para>When it's off we read value together with the key in one round</para>
+            <para>Default is true</para>
             </summary>
         </member>
         <member name="M:DBreeze.Transactions.Transaction.SynchronizeTables(System.Collections.Generic.IList{System.String})">
@@ -4702,8 +4678,11 @@
             <summary>
             Will create internal table if it doesn't exist and return it.
             </summary>
+            <typeparam name="TKey"></typeparam>
             <param name="tableName"></param>
-            <param name="tableNumber"></param>
+            <param name="key"></param>
+            <param name="tableIndex"></param>
+            <returns></returns>
         </member>
         <member name="M:DBreeze.Transactions.Transaction.SelectTable``1(System.String,``0,System.UInt32)">
             <summary>
@@ -5561,6 +5540,200 @@
             <param name="f"></param>
             <param name="arg"></param>
             <param name="callback"></param>
+        </member>
+        <member name="T:DBreeze.Utils.Biser">
+            <summary>
+            Custom binary serializer of well known types
+            </summary>
+        </member>
+        <member name="T:DBreeze.Utils.Biser.Decoder">
+            <summary>
+            Biser.Decoder
+            </summary>
+        </member>
+        <member name="F:DBreeze.Utils.Biser.Decoder.qb">
+            <summary>
+            Quantity of bytes needed to form latest varint
+            </summary>
+        </member>
+        <member name="F:DBreeze.Utils.Biser.Decoder.IsNull">
+            <summary>
+            true in case if object is null
+            </summary>
+        </member>
+        <member name="M:DBreeze.Utils.Biser.Decoder.#ctor(System.Byte[])">
+            <summary>
+            
+            </summary>
+            <param name="encoded"></param>
+        </member>
+        <member name="M:DBreeze.Utils.Biser.Decoder.#ctor(DBreeze.Utils.Biser.Decoder,System.Boolean)">
+            <summary>
+            
+            </summary>
+            <param name="decoder"></param>
+        </member>
+        <member name="M:DBreeze.Utils.Biser.Decoder.CheckNull">
+            <summary>
+            Is used for checking next collection on null, before getting one of the itterators.
+            </summary>
+            <returns>true if null</returns>
+        </member>
+        <member name="M:DBreeze.Utils.Biser.Decoder.GetCollection(System.Boolean)">
+            <summary>
+            Universal, but a bit slower (because of the yield returns) than those ones with IDictionary or IList
+            </summary>
+            <param name="isNullChecked"></param>
+            <returns></returns>
+        </member>
+        <member name="M:DBreeze.Utils.Biser.Decoder.GetCollection``1(System.Func{``0},System.Collections.Generic.IList{``0},System.Boolean)">
+            <summary>
+            
+            </summary>
+            <typeparam name="K"></typeparam>
+            <param name="fk"></param>
+            <param name="lst"></param>
+            <param name="isNullChecked"></param>
+        </member>
+        <member name="M:DBreeze.Utils.Biser.Decoder.GetCollection``2(System.Func{``0},System.Func{``1},System.Collections.Generic.IDictionary{``0,``1},System.Boolean)">
+            <summary>
+            
+            </summary>
+            <typeparam name="K"></typeparam>
+            <typeparam name="V"></typeparam>
+            <param name="fk"></param>
+            <param name="fv"></param>
+            <param name="dict"></param>
+            <param name="isNullChecked"></param>
+        </member>
+        <member name="M:DBreeze.Utils.Biser.Decoder.JSGetLong">
+            <summary>
+             Javascript Biser decoder
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:DBreeze.Utils.Biser.Decoder.JSGetString">
+            <summary>
+            Javascript Biser decoder
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:DBreeze.Utils.Biser.Decoder.JSGetDouble">
+            <summary>
+             Javascript Biser decoder
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="T:DBreeze.Utils.Biser.Encoder">
+            <summary>
+            Biser.Encoder
+            </summary>
+        </member>
+        <member name="M:DBreeze.Utils.Biser.GetVarintBytes(System.UInt64)">
+            <summary>
+            Uses protobuf concepts
+            </summary>
+            <param name="value"></param>
+            <returns></returns>
+        </member>
+        <member name="M:DBreeze.Utils.Biser.ToTarget(System.Byte[],System.Int32)">
+            <summary>
+            ToTarget
+            </summary>
+            <param name="bytes"></param>
+            <param name="sizeBites"></param>
+            <returns></returns>
+        </member>
+        <member name="M:DBreeze.Utils.Biser.Encode_DICT_PROTO_STRING_BYTEARRAYHASHSET(System.Collections.Generic.IDictionary{System.String,System.Collections.Generic.List{System.Byte[]}},DBreeze.Utils.Compression.eCompressionMethod)">
+            <summary>
+            Proto encoding of Dictionary [string, List[byte[]]].
+            Hashset can be null, after decoding istantiated, zero-length hashset will be returned in this case.
+            </summary>
+            <param name="d"></param>
+            <param name="compression"></param>
+            <returns></returns>
+        </member>
+        <member name="M:DBreeze.Utils.Biser.Decode_DICT_PROTO_STRING_BYTEARRAYHASHSET(System.Byte[],System.Collections.Generic.IDictionary{System.String,System.Collections.Generic.List{System.Byte[]}},DBreeze.Utils.Compression.eCompressionMethod)">
+            <summary>
+            Decodes byte[] into  Dictionary [string, List[byte[]]]
+            </summary>
+            <param name="encB"></param>
+            <param name="retD"></param>
+            <param name="compression"></param>
+            <returns></returns>
+        </member>
+        <member name="M:DBreeze.Utils.Biser.Encode_DICT_PROTO_STRING_UINTHASHSET(System.Collections.Generic.IDictionary{System.String,System.Collections.Generic.HashSet{System.UInt32}},DBreeze.Utils.Compression.eCompressionMethod)">
+            <summary>
+            Proto encoding of Dictionary [string, HashSet[uint]].
+            Hashset can be null, after decoding istantiated, zero-length hashset will be returned in this case.
+            </summary>
+            <param name="d"></param>
+            <param name="compression"></param>
+            <returns></returns>
+        </member>
+        <member name="M:DBreeze.Utils.Biser.Decode_DICT_PROTO_STRING_UINTHASHSET(System.Byte[],System.Collections.Generic.IDictionary{System.String,System.Collections.Generic.HashSet{System.UInt32}},DBreeze.Utils.Compression.eCompressionMethod)">
+            <summary>
+            Decodes byte[] into  Dictionary [string, HashSet[uint]]
+            </summary>
+            <param name="encB"></param>
+            <param name="retD"></param>
+            <param name="compression"></param>
+            <returns></returns>
+        </member>
+        <member name="M:DBreeze.Utils.Biser.Encode_DICT_PROTO_UINT_BYTEARRAY(System.Collections.Generic.IDictionary{System.UInt32,System.Byte[]},DBreeze.Utils.Compression.eCompressionMethod)">
+            <summary>
+            Proto encoding of Dictionary [uint, byte[]].
+            Use when key is less then 4 bytes (less then 268mln).
+            Value byte[0] will be presented as null after decoding
+            </summary>
+            <param name="d"></param>
+            <param name="compression">compression method extra applied to the outgoing byte array</param>
+            <returns></returns>
+        </member>
+        <member name="M:DBreeze.Utils.Biser.Decode_DICT_PROTO_UINT_BYTEARRAY(System.Byte[],System.Collections.Generic.IDictionary{System.UInt32,System.Byte[]},DBreeze.Utils.Compression.eCompressionMethod)">
+            <summary>
+            Used when parameter is encoded with Encode_DICT_PROTO_UINT_BYTEARRAY.
+            Returns Dictionary [uint, byte[]]
+            </summary>
+            <param name="encB"></param>
+            <param name="retD">Instantiated Dictionary must be supplied and will be returned filled</param>        
+            <param name="compression">compression method supplied by Encode_DICT_PROTO_UINT_BYTEARRAY</param>
+        </member>
+        <member name="M:DBreeze.Utils.Biser.Encode_PROTO_ListByteArray(System.Collections.Generic.IList{System.Byte[]})">
+            <summary>
+            null elements equal to new byte[0]
+            </summary>
+            <param name="d"></param>
+            <returns></returns>
+        </member>
+        <member name="M:DBreeze.Utils.Biser.Decode_PROTO_ListByteArray(System.Byte[])">
+            <summary>
+            null elements equal to new byte[0]
+            </summary>
+            <param name="encB"></param>
+            <returns></returns>
+        </member>
+        <member name="M:DBreeze.Utils.Biser.GetVarintBytes(System.UInt32)">
+            <summary>
+            Returns the specified 32-bit unsigned value as varint encoded array of bytes.
+            Uses protobuf concepts
+            </summary>
+            <param name="value"></param>
+            <returns></returns>
+        </member>
+        <member name="M:DBreeze.Utils.Biser.GetVarintBytes(System.Int64)">
+            <summary>
+            Returns the specified 64-bit signed value as varint encoded array of bytes.   
+            </summary>
+            <param name="value">64-bit signed value</param>
+            <returns>Varint array of bytes.</returns>
+        </member>
+        <member name="M:DBreeze.Utils.Biser.ToUInt32(System.Byte[])">
+            <summary>
+            Uses protobuf concepts
+            </summary>
+            <param name="bytes"></param>
+            <returns></returns>
         </member>
         <member name="T:DBreeze.Utils.BloomFilter.Filter`1.HashFunction">
             <summary>
@@ -6653,95 +6826,6 @@
              foreach (var r1 in input.OrderBy(x => x, new ByteListComparer())) Debug.WriteLine(r1.ToBytesString());
             </summary>
         </member>
-        <member name="T:DBreeze.Utils.Biser">
-            <summary>
-            Custom binary serializer of well known types
-            </summary>
-        </member>
-        <member name="M:DBreeze.Utils.Biser.Encode_DICT_PROTO_STRING_BYTEARRAYHASHSET(System.Collections.Generic.IDictionary{System.String,System.Collections.Generic.List{System.Byte[]}},DBreeze.Utils.Compression.eCompressionMethod)">
-            <summary>
-            Proto encoding of Dictionary [string, List[byte[]]].
-            Hashset can be null, after decoding istantiated, zero-length hashset will be returned in this case.
-            </summary>
-            <param name="d"></param>
-            <param name="compression"></param>
-            <returns></returns>
-        </member>
-        <member name="M:DBreeze.Utils.Biser.Decode_DICT_PROTO_STRING_BYTEARRAYHASHSET(System.Byte[],System.Collections.Generic.IDictionary{System.String,System.Collections.Generic.List{System.Byte[]}},DBreeze.Utils.Compression.eCompressionMethod)">
-            <summary>
-            Decodes byte[] into  Dictionary [string, List[byte[]]]
-            </summary>
-            <param name="encB"></param>
-            <param name="retD"></param>
-            <param name="compression"></param>
-            <returns></returns>
-        </member>
-        <member name="M:DBreeze.Utils.Biser.Encode_DICT_PROTO_STRING_UINTHASHSET(System.Collections.Generic.IDictionary{System.String,System.Collections.Generic.HashSet{System.UInt32}},DBreeze.Utils.Compression.eCompressionMethod)">
-            <summary>
-            Proto encoding of Dictionary [string, HashSet[uint]].
-            Hashset can be null, after decoding istantiated, zero-length hashset will be returned in this case.
-            </summary>
-            <param name="d"></param>
-            <param name="compression"></param>
-            <returns></returns>
-        </member>
-        <member name="M:DBreeze.Utils.Biser.Decode_DICT_PROTO_STRING_UINTHASHSET(System.Byte[],System.Collections.Generic.IDictionary{System.String,System.Collections.Generic.HashSet{System.UInt32}},DBreeze.Utils.Compression.eCompressionMethod)">
-            <summary>
-            Decodes byte[] into  Dictionary [string, HashSet[uint]]
-            </summary>
-            <param name="encB"></param>
-            <param name="retD"></param>
-            <param name="compression"></param>
-            <returns></returns>
-        </member>
-        <member name="M:DBreeze.Utils.Biser.Encode_DICT_PROTO_UINT_BYTEARRAY(System.Collections.Generic.IDictionary{System.UInt32,System.Byte[]},DBreeze.Utils.Compression.eCompressionMethod)">
-            <summary>
-            Proto encoding of Dictionary [uint, byte[]].
-            Use when key is less then 4 bytes (less then 268mln).
-            Value byte[0] will be presented as null after decoding
-            </summary>
-            <param name="d"></param>
-            <param name="compression">compression method extra applied to the outgoing byte array</param>
-            <returns></returns>
-        </member>
-        <member name="M:DBreeze.Utils.Biser.Decode_DICT_PROTO_UINT_BYTEARRAY(System.Byte[],System.Collections.Generic.IDictionary{System.UInt32,System.Byte[]},DBreeze.Utils.Compression.eCompressionMethod)">
-            <summary>
-            Used when parameter is encoded with Encode_DICT_PROTO_UINT_BYTEARRAY.
-            Returns Dictionary [uint, byte[]]
-            </summary>
-            <param name="encB"></param>
-            <param name="retD">Instantiated Dictionary must be supplied and will be returned filled</param>        
-            <param name="compression">compression method supplied by Encode_DICT_PROTO_UINT_BYTEARRAY</param>
-        </member>
-        <member name="M:DBreeze.Utils.Biser.GetVarintBytes(System.UInt32)">
-            <summary>
-            Uses protobuf concepts
-            </summary>
-            <param name="value"></param>
-            <returns></returns>
-        </member>
-        <member name="M:DBreeze.Utils.Biser.GetVarintBytes(System.UInt64)">
-            <summary>
-            Uses protobuf concepts
-            </summary>
-            <param name="value"></param>
-            <returns></returns>
-        </member>
-        <member name="M:DBreeze.Utils.Biser.ToUInt32(System.Byte[])">
-            <summary>
-            Uses protobuf concepts
-            </summary>
-            <param name="bytes"></param>
-            <returns></returns>
-        </member>
-        <member name="M:DBreeze.Utils.Biser.ToTarget(System.Byte[],System.Int32)">
-            <summary>
-            ToTarget
-            </summary>
-            <param name="bytes"></param>
-            <param name="sizeBites"></param>
-            <returns></returns>
-        </member>
         <member name="M:DBreeze.Utils.Compression.GZip_Compress(System.Byte[])">
             <summary>
             In Memory Compression with Gzip
@@ -6819,7 +6903,6 @@
             <summary>
             If gate is closed then it will be closed timeout time in milliseconds
             </summary>
-            <param name="milliseconds"></param>
             <param name="milliseconds">exitContext</param>
             <returns></returns>
         </member>
